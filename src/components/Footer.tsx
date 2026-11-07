@@ -87,7 +87,7 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
             </div>
             <div className="flex items-center gap-2.5 pt-1">
               <img
-                src="/logo.png"
+                src={`${import.meta.env.BASE_URL}logo.png`}
                 alt="AnomalyWall Logo"
                 className="w-6 h-6 object-contain"
               />

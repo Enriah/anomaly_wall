@@ -115,7 +115,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
           id: 'art-1',
           title: 'Saldevie',
           subtitle: 'Forbidden Forest',
-          imageUrl: '/artworks/saldevie-forbidden-forest.jpg',
+          imageUrl: `${import.meta.env.BASE_URL}artworks/saldevie-forbidden-forest.jpg`,
         },
         {
           id: 'art-2',

@@ -33,7 +33,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
       project: 'FinalStars',
       projectId: 'finalstars',
       artworkIndex: 0,
-      imageUrl: '/artworks/saldevie-forbidden-forest.jpg',
+      imageUrl: `${import.meta.env.BASE_URL}artworks/saldevie-forbidden-forest.jpg`,
     },
     { id: '2', title: 'Artwork 02', subtitle: 'Environment Matte Painting', projectId: 'finalstars', artworkIndex: 1, imageUrl: '' },
     { id: '3', title: 'Artwork 03', subtitle: 'Editorial & Brand Direction', projectId: 'finalstars', artworkIndex: 2, imageUrl: '' },

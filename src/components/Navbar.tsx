@@ -113,7 +113,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Name & Logo */}
           <a href="#" className="flex items-center gap-3 group">
             <img
-              src="/logo.png"
+              src={`${import.meta.env.BASE_URL}logo.png`}
               alt="AnomalyWall Logo"
               className="w-8 h-8 object-contain"
             />
