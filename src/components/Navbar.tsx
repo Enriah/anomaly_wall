@@ -4,11 +4,15 @@ import { Volume2, VolumeX, Globe } from 'lucide-react';
 interface NavbarProps {
   lang: 'vi' | 'en';
   onToggleLang: () => void;
+  isIntroActive?: boolean;
+  onReplayIntro?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   lang,
   onToggleLang,
+  isIntroActive = false,
+  onReplayIntro,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSoundActive, setIsSoundActive] = useState(false);
@@ -128,11 +132,23 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between gap-2">
           
           {/* Brand Name & Logo */}
-          <a href="#" className="flex items-center gap-2 sm:gap-3 group min-w-0">
+          <a
+            href="#"
+            onClick={(e) => {
+              if (onReplayIntro && window.scrollY < 40) {
+                e.preventDefault();
+                onReplayIntro();
+              }
+            }}
+            className="flex items-center gap-2 sm:gap-3 group min-w-0"
+          >
             <img
-              src={`${import.meta.env.BASE_URL}logo.png`}
+              id="navbar-logo-target"
+              src={`${import.meta.env.BASE_URL}anw-logo.svg`}
               alt="AnomalyWall Logo"
-              className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0"
+              className={`w-7 h-7 sm:w-9 sm:h-9 object-contain flex-shrink-0 transition-opacity duration-300 ${
+                isIntroActive ? 'opacity-0' : 'opacity-100'
+              }`}
             />
             <span className="inline-block font-accent tracking-tight sm:tracking-wider text-[11px] sm:text-xl font-bold scale-y-125 text-black hover:text-zinc-900 transition-colors truncate">
               AnomalyWall

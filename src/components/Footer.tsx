@@ -87,9 +87,9 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
             </div>
             <div className="flex items-center gap-2.5 pt-1">
               <img
-                src={`${import.meta.env.BASE_URL}logo.png`}
+                src={`${import.meta.env.BASE_URL}anw-logo.svg`}
                 alt="AnomalyWall Logo"
-                className="w-6 h-6 object-contain"
+                className="w-7 h-7 object-contain"
               />
               <span className="text-zinc-300 font-semibold tracking-wider text-sm font-sans">
                 AnomalyWall Team
@@ -112,7 +112,7 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
         onClick={scrollToTop}
         aria-label={lang === 'vi' ? 'Về đầu trang' : 'Back to Top'}
         title={lang === 'vi' ? 'Về đầu trang' : 'Back to Top'}
-        className={`fixed bottom-8 right-8 z-50 w-11 h-11 rounded-full bg-zinc-900/90 hover:bg-purple-600/30 backdrop-blur-md border border-white/15 hover:border-purple-400 text-zinc-200 hover:text-white shadow-[0_10px_30px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all duration-300 ${
+        className={`fixed bottom-8 right-8 z-50 w-11 h-11 rounded-full bg-zinc-900/90 hover:bg-white/20 backdrop-blur-md border border-white/15 hover:border-white text-zinc-200 hover:text-white shadow-[0_10px_30px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all duration-300 ${
           showFloatingTop
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'
