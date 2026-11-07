@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, X, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Image as ImageIcon } from 'lucide-react';
 
 interface ProjectArtwork {
   id: string;
@@ -259,30 +259,42 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
           </h2>
         </div>
 
-        {/* Dải 5 hình bình hành chéo giãn cao toàn trang và sát viền trên/dưới */}
-        <div className="px-6 sm:px-12 flex-1 flex flex-col">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-0 flex-1">
+        {/* Dải 5 hình bình hành chéo: Xếp dọc nối khít nhau trên điện thoại (-skew-y-6) và xếp ngang trên máy tính (-skew-x-12) */}
+        <div className="px-2 sm:px-6 lg:px-12 py-6 lg:py-0 flex-1 flex flex-col">
+          <div className="flex flex-col lg:grid lg:grid-cols-5 gap-0 flex-1">
             {projects.map((project) => {
               const isOpen = activeProjectId === project.id;
               return (
                 <div
                   key={project.id}
                   onClick={() => handleProjectClick(project)}
-                  className={`group relative min-h-[75vh] lg:min-h-[80vh] h-full -skew-x-12 -ml-px first:ml-0 transition-all duration-300 ease-out overflow-hidden border-x border-y-0 hover:z-30 hover:scale-x-[1.05] hover:shadow-[0_0_50px_rgba(0,0,0,0.95),0_0_30px_rgba(255,255,255,0.2)] ${
+                  className={`group relative h-28 sm:h-32 lg:h-full lg:min-h-[80vh] w-full -skew-y-6 lg:skew-y-0 lg:-skew-x-12 -mt-px first:mt-0 lg:mt-0 lg:-ml-px lg:first:ml-0 transition-all duration-300 ease-out overflow-hidden border-y border-x-0 lg:border-x lg:border-y-0 hover:z-30 hover:scale-y-[1.06] lg:hover:scale-y-100 lg:hover:scale-x-[1.05] hover:shadow-[0_0_50px_rgba(0,0,0,0.95),0_0_30px_rgba(255,255,255,0.2)] ${
                     project.isComingSoon
                       ? 'bg-[#0b0b12]/95 border-white/[0.08] hover:bg-[#12121a] hover:border-white/60 cursor-default'
                       : isOpen
-                      ? 'bg-gradient-to-br from-[#1c1c26] via-[#12121a] to-[#090910] border-white z-20 cursor-pointer shadow-[0_0_35px_rgba(255,255,255,0.2)]'
-                      : 'bg-gradient-to-br from-[#161620] via-[#0e0e15] to-[#090910] border-white/75 hover:border-white z-10 cursor-pointer'
+                      ? 'bg-gradient-to-r lg:bg-gradient-to-br from-[#1c1c26] via-[#12121a] to-[#090910] border-white z-20 cursor-pointer shadow-[0_0_35px_rgba(255,255,255,0.2)]'
+                      : 'bg-gradient-to-r lg:bg-gradient-to-br from-[#161620] via-[#0e0e15] to-[#090910] border-white/75 hover:border-white z-10 cursor-pointer'
                   }`}
                 >
+                  {/* Lớp hình nền dự án (nếu có) được khử nghiêng để luôn hiển thị thẳng đứng tự nhiên cả trên điện thoại lẫn máy tính */}
+                  {project.artworks?.[0]?.imageUrl && !project.isComingSoon && (
+                    <div className="absolute inset-0 skew-y-6 lg:skew-y-0 lg:skew-x-12 scale-125 pointer-events-none opacity-20 group-hover:opacity-35 transition-opacity duration-500">
+                      <img
+                        src={project.artworks[0].imageUrl}
+                        alt={project.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#090910] via-[#090910]/60 to-transparent" />
+                    </div>
+                  )}
+
                   {/* Ánh sáng trang trí bên trong cho dự án chính */}
                   {!project.isComingSoon && (
                     <div className="absolute -top-16 -right-16 w-36 h-36 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500 pointer-events-none" />
                   )}
 
                   {/* Khử độ nghiêng (un-skew) cho phần chữ bên trong */}
-                  <div className="skew-x-12 w-full h-full px-8 py-7 flex flex-col justify-end relative z-10">
+                  <div className="skew-y-6 lg:skew-y-0 lg:skew-x-12 w-full h-full px-6 py-4 lg:px-8 lg:py-7 flex flex-col justify-center lg:justify-end relative z-10">
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <h3
@@ -294,13 +306,6 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                         >
                           {project.title}
                         </h3>
-                        {!project.isComingSoon && (
-                          <ChevronDown
-                            className={`w-4 h-4 text-zinc-200 transition-transform duration-300 ${
-                              isOpen ? 'rotate-180' : 'group-hover:translate-y-0.5'
-                            }`}
-                          />
-                        )}
                       </div>
                       {project.tag && (
                         <div>
@@ -347,8 +352,8 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                           onClick={() => setActiveTab(tab.id)}
                           className={`relative py-2 text-xs font-mono uppercase tracking-wider transition-all duration-300 border-b-2 ${
                             isTabActive
-                              ? 'text-white border-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.45)]'
-                              : 'text-zinc-500 border-transparent hover:text-zinc-200 hover:border-purple-400/60 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.25)]'
+                              ? 'text-white border-white drop-shadow-[0_0_10px_rgba(255,255,255,0.45)]'
+                              : 'text-zinc-500 border-transparent hover:text-zinc-200 hover:border-white/60 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.25)]'
                           }`}
                         >
                           <span>{tab.label[lang]}</span>
@@ -370,7 +375,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                 {activeTab === 'overview' && (
                   <div className="max-w-3xl space-y-4">
                     <div className="flex items-center gap-3">
-                      <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-purple-300 bg-purple-500/10 border border-purple-500/20">
+                      <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-zinc-100 bg-white/10 border border-white/30">
                         {activeProject.tag || 'PROJECT'}
                       </span>
                       <span className="text-xs font-mono text-zinc-500">
@@ -408,8 +413,8 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                               onClick={() => setSelectedArtIndex(idx)}
                               className={`group relative w-36 lg:w-full flex-shrink-0 aspect-video overflow-hidden border text-left transition-all duration-300 ${
                                 isSelected
-                                  ? 'border-purple-400 ring-2 ring-purple-500/30 z-10'
-                                  : 'border-white/10 opacity-50 hover:opacity-100 hover:border-white/30'
+                                  ? 'border-white ring-2 ring-white/30 z-10'
+                                  : 'border-white/10 opacity-50 hover:opacity-100 hover:border-white/40'
                               }`}
                             >
                               {art.imageUrl ? (
@@ -519,14 +524,14 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                 {/* 3. DEVELOPMENT (TOOLS) */}
                 {activeTab === 'development' && activeProject.development && (
                   <div className="space-y-3">
-                    <h4 className="font-mono text-xs uppercase tracking-widest text-purple-400">
+                    <h4 className="font-mono text-xs uppercase tracking-widest text-white">
                       {lang === 'vi' ? 'Công cụ (Tools)' : 'Tools & Software'}
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {activeProject.development.tools.map((tool) => (
                         <span
                           key={tool}
-                          className="px-3 py-1.5 text-xs font-mono text-zinc-200 bg-white/[0.04] border border-white/10"
+                          className="px-3 py-1.5 text-xs font-mono text-zinc-200 bg-white/[0.04] border border-white/15"
                         >
                           {tool}
                         </span>
@@ -538,8 +543,8 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                 {/* 4. CỐT TRUYỆN (STORY / LORE) */}
                 {activeTab === 'story' && activeProject.story && (
                   <div className="max-w-4xl space-y-6">
-                    <div className="space-y-2 border-l-2 border-purple-500 pl-4">
-                      <span className="font-mono text-[10px] uppercase tracking-widest text-purple-400">
+                    <div className="space-y-2 border-l-2 border-white pl-4">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-white">
                         {lang === 'vi' ? 'Tóm tắt thế giới quan' : 'World Synopsis'}
                       </span>
                       <p className="text-sm sm:text-base text-zinc-200 font-light leading-relaxed italic">

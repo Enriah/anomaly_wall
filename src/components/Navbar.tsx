@@ -105,32 +105,32 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-zinc-500 border-b border-black/15 ${
-      isScrolled ? 'py-3 shadow-2xl' : 'py-4 shadow-lg'
+      isScrolled ? 'py-2.5 sm:py-3 shadow-2xl' : 'py-3 sm:py-4 shadow-lg'
     }`}>
-      <div className="w-full px-6 sm:px-10 lg:px-14">
-        <div className="flex items-center justify-between">
+      <div className="w-full px-3 sm:px-10 lg:px-14">
+        <div className="flex items-center justify-between gap-2">
           
           {/* Brand Name & Logo */}
-          <a href="#" className="flex items-center gap-3 group">
+          <a href="#" className="flex items-center gap-2 sm:gap-3 group min-w-0">
             <img
               src={`${import.meta.env.BASE_URL}logo.png`}
               alt="AnomalyWall Logo"
-              className="w-8 h-8 object-contain"
+              className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0"
             />
-            <span className="inline-block font-accent tracking-wider text-xl font-bold scale-y-125 text-black hover:text-zinc-900 transition-colors">
+            <span className="inline-block font-accent tracking-tight sm:tracking-wider text-[11px] sm:text-xl font-bold scale-y-125 text-black hover:text-zinc-900 transition-colors truncate">
               AnomalyWall
             </span>
           </a>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2 sm:gap-5 flex-shrink-0">
             {/* Nút cuộn xuống phần Project */}
             <button
               onClick={() => {
                 const projectsEl = document.getElementById('projects');
                 smoothScrollToElement(projectsEl, 750);
               }}
-              className="px-1.5 py-1 text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
+              className="px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
             >
               Project
             </button>
@@ -138,20 +138,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Language Switcher */}
             <button
               onClick={onToggleLang}
-              className="flex items-center gap-1.5 px-1.5 py-1 text-xs font-mono font-bold text-black hover:opacity-70 transition-opacity"
+              className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold text-black hover:opacity-70 transition-opacity"
               title="Chuyển ngôn ngữ / Switch Language"
             >
-              <Globe className="w-4 h-4 text-black" />
+              <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black" />
               <span>{lang === 'vi' ? 'VI' : 'EN'}</span>
             </button>
 
             {/* Ambient Soundscape Toggle */}
             <button
               onClick={toggleSound}
-              className="p-1.5 text-black hover:opacity-70 transition-opacity"
+              className="p-1 sm:p-1.5 text-black hover:opacity-70 transition-opacity"
               title={isSoundActive ? (lang === 'vi' ? 'Tắt âm thanh triển lãm' : 'Mute ambient soundscape') : (lang === 'vi' ? 'Bật âm thanh triển lãm số' : 'Enable ambient soundscape')}
             >
-              {isSoundActive ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              {isSoundActive ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
           </div>
         </div>
