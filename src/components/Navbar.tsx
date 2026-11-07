@@ -104,10 +104,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-zinc-500 border-b border-black/15 ${
-      isScrolled ? 'py-2.5 sm:py-3 shadow-2xl' : 'py-3 sm:py-4 shadow-lg'
-    }`}>
-      <div className="w-full px-3 sm:px-10 lg:px-14">
+    <header
+      style={{
+        backgroundImage: `
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 2px),
+          linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.08) 22%, rgba(0,0,0,0.12) 52%, rgba(0,0,0,0.28) 88%, rgba(255,255,255,0.3) 100%),
+          linear-gradient(110deg, #686b74 0%, #8d919b 16%, #cfd3dc 30%, #838791 45%, #5e616a 60%, #b8bcc6 76%, #70737c 90%, #8a8e98 100%)
+        `,
+      }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-zinc-900/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),inset_0_-1px_0_rgba(0,0,0,0.35),0_10px_28px_-6px_rgba(0,0,0,0.5)] ${
+        isScrolled ? 'py-2.5 sm:py-3' : 'py-3 sm:py-4'
+      }`}
+    >
+      {/* Ánh kim phản chiếu ngang (Specular Metallic Glint) */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-55"
+        style={{
+          background:
+            'radial-gradient(ellipse 55% 120% at 28% 0%, rgba(255,255,255,0.55) 0%, transparent 70%), radial-gradient(ellipse 45% 120% at 78% 100%, rgba(255,255,255,0.35) 0%, transparent 70%)',
+        }}
+      />
+      <div className="relative z-10 w-full px-3 sm:px-10 lg:px-14">
         <div className="flex items-center justify-between gap-2">
           
           {/* Brand Name & Logo */}

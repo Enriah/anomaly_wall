@@ -89,14 +89,82 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
     setCurrentIndex((prev) => (prev + 1) % artworks.length);
   };
 
+  const currentArtwork = artworks[currentIndex];
+  const totalSlides = artworks.length;
+
+  // Tính vị trí tương đối (-2, -1, 0, 1, 2) của từng slide so với slide chính
+  const getRelativeOffset = (idx: number) => {
+    let diff = idx - currentIndex;
+    if (diff > totalSlides / 2) diff -= totalSlides;
+    if (diff < -totalSlides / 2) diff += totalSlides;
+    return diff;
+  };
+
   return (
     <section
       ref={sectionRef}
       onMouseMove={handleSectionMouseMove}
       onMouseDown={handleSectionClick}
-      className="relative min-h-screen pt-20 pb-6 flex flex-col justify-center overflow-hidden bg-gradient-to-b from-[#f4f4f8] via-[#ebebf2] to-[#e2e2ec] select-none"
+      className="relative min-h-screen pt-20 pb-6 flex flex-col justify-center overflow-hidden bg-gradient-to-b from-[#f3f3f7] via-[#e7e7ef] to-[#d6d6e2] select-none"
     >
-      {/* Lớp gợn sóng CSS3 Ripple Effect phía sau slider */}
+      {/* 1. Lớp ánh sáng Studio Vignette tạo chiều sâu hướng tâm */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(255,255,255,0.88) 0%, rgba(232,232,242,0.38) 58%, rgba(162,164,184,0.45) 100%)',
+        }}
+      />
+
+      {/* 2. Lớp lưới kiến trúc mảnh (Architectural Micro-Grid) mờ dần ra rìa */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 opacity-75"
+        style={{
+          backgroundSize: '56px 56px',
+          backgroundImage:
+            'linear-gradient(to right, rgba(20, 20, 35, 0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(20, 20, 35, 0.045) 1px, transparent 1px)',
+          maskImage: 'radial-gradient(ellipse 75% 70% at 50% 50%, black 35%, transparent 95%)',
+          WebkitMaskImage:
+            'radial-gradient(ellipse 75% 70% at 50% 50%, black 35%, transparent 95%)',
+        }}
+      />
+
+      {/* 3. Vòng quỹ đạo tinh cầu chìm (Celestial Rings) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center z-0">
+        <div className="w-[92vw] max-w-[1480px] aspect-square rounded-full border border-zinc-900/[0.045]" />
+        <div className="absolute w-[70vw] max-w-[1120px] aspect-square rounded-full border border-dashed border-zinc-900/[0.055]" />
+      </div>
+
+      {/* 4. Quầng sáng chuyển động & phản chiếu màu sắc từ tác phẩm đang chiếu */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center z-0">
+        <div className="animate-gallery-orb absolute -top-10 left-1/4 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-white via-zinc-200/60 to-zinc-400/25 blur-3xl opacity-85" />
+        <div className="animate-gallery-orb-reverse absolute -bottom-16 right-1/4 w-[560px] h-[560px] rounded-full bg-gradient-to-tl from-zinc-300/55 via-slate-200/45 to-white blur-3xl opacity-80" />
+
+        {currentArtwork?.imageUrl && (
+          <img
+            src={currentArtwork.imageUrl}
+            alt=""
+            aria-hidden="true"
+            className="w-[78%] max-w-[1280px] aspect-video object-cover blur-[75px] opacity-35 scale-105 saturate-150 transition-all duration-1000"
+          />
+        )}
+      </div>
+
+      {/* 5. Kết cấu vân giấy mỹ thuật (Fine-Art Paper & Film Grain SVG Filter) */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.055] mix-blend-multiply pointer-events-none z-0" aria-hidden="true">
+        <filter id="gallery-fine-paper">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.82"
+            numOctaves="4"
+            stitchTiles="stitch"
+          />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#gallery-fine-paper)" />
+      </svg>
+
+      {/* 6. Lớp gợn sóng CSS3 Ripple Effect phía sau slider */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         {ripples.map((r) => (
           <span
@@ -107,99 +175,151 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
         ))}
       </div>
 
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-14 space-y-5 relative z-10">
-        
-        {/* Ảnh 16:9 ngang lớn vừa vặn, có khoảng thở đẹp mắt với thanh Navbar */}
+      {/* Sân khấu Carousel toàn chiều ngang cho phép lộ rìa phải của ảnh trước (bên trái) và rìa trái của ảnh sau (bên phải) */}
+      <div className="w-full space-y-5 relative z-10">
         <div
-          className="relative w-full max-w-[calc((100vh-148px)*16/9)] mx-auto aspect-video overflow-hidden bg-[#0c0c14] shadow-[0_30px_70px_-12px_rgba(15,15,30,0.65),0_15px_35px_-10px_rgba(0,0,0,0.45)] group"
+          className="relative w-full"
           onMouseEnter={() => setIsAutoPlay(false)}
           onMouseMove={() => setIsAutoPlay(false)}
           onMouseLeave={() => setIsAutoPlay(true)}
         >
-          
-          {/* Dải băng chuyền trượt ngang */}
-          <div
-            className="flex w-full h-full transition-transform duration-700 ease-out"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-          >
-            {artworks.map((art, idx) => (
-              <div
-                key={art.id}
-                onClick={() => {
-                  if (art.projectId && onSelectArtwork) {
-                    onSelectArtwork(art.projectId, art.artworkIndex ?? 0);
-                  }
-                }}
-                className={`w-full h-full flex-shrink-0 relative ${
-                  art.projectId ? 'cursor-pointer' : ''
-                }`}
-              >
-                {art.imageUrl ? (
-                  <img
-                    src={art.imageUrl}
-                    alt={`${art.title} ${art.subtitle}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  /* Placeholder 16:9 trực tiếp */
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center bg-[#0d0d16] border border-white/[0.06]">
-                    <div className="w-14 h-14 bg-white/[0.03] border border-white/10 flex items-center justify-center text-zinc-500">
-                      <ImageIcon className="w-7 h-7" />
-                    </div>
-                    <span className="font-mono text-xs sm:text-sm text-zinc-300 uppercase tracking-widest">
-                      {lang === 'vi' ? `SLIDE #0${idx + 1} — ẢNH 2D ARTWORK NGANG (16:9)` : `SLIDE #0${idx + 1} — WIDESCREEN 2D ARTWORK (16:9)`}
-                    </span>
-                    <span className="font-mono text-xs text-zinc-500">
-                      1920 × 1080
-                    </span>
-                  </div>
-                )}
+          {/* Khung định vị kích thước của Slide chính ở trung tâm */}
+          <div className="relative w-[82vw] sm:w-[76vw] lg:w-[min(74vw,calc((100vh-152px)*16/9))] mx-auto aspect-video">
+            {artworks.map((art, idx) => {
+              const offset = getRelativeOffset(idx);
+              const isActive = offset === 0;
+              const isPrev = offset === -1;
+              const isNext = offset === 1;
+              const isVisible = isActive || isPrev || isNext;
 
-                {/* Góc trên bên trái: Tên dự án kèm hiệu ứng mờ đen */}
-                {art.project && (
-                  <>
-                    <div className="absolute top-0 left-0 w-[360px] h-36 bg-gradient-to-br from-black/85 via-black/45 to-transparent blur-md pointer-events-none" />
-                    <div className="absolute top-5 left-6 sm:top-7 sm:left-8 pointer-events-none">
-                      <span className="font-display text-lg sm:text-2xl font-bold text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-                        {art.project}
+              // Vị trí dịch chuyển:
+              // - Slide chính (offset = 0): nằm chính giữa (translateX(0) scale(1))
+              // - Slide trước (offset = -1): dịch sang trái (-88%) và thu nhỏ nhẹ (scale(0.9)) để bị che khuất một phần dưới ảnh chính và chỉ lộ vùng bên phải của nó ở rìa trái
+              // - Slide sau (offset = 1): dịch sang phải (+88%) và thu nhỏ nhẹ (scale(0.9)) để chỉ lộ vùng bên trái của nó ở rìa phải
+              let transformStyle = 'translate3d(0%, 0, 0) scale(1)';
+              if (isPrev) {
+                transformStyle = 'translate3d(-88%, 0, 0) scale(0.9)';
+              } else if (isNext) {
+                transformStyle = 'translate3d(88%, 0, 0) scale(0.9)';
+              } else if (offset < -1) {
+                transformStyle = 'translate3d(-170%, 0, 0) scale(0.82)';
+              } else if (offset > 1) {
+                transformStyle = 'translate3d(170%, 0, 0) scale(0.82)';
+              }
+
+              return (
+                <div
+                  key={art.id}
+                  onClick={() => {
+                    if (isPrev) {
+                      prevSlide();
+                    } else if (isNext) {
+                      nextSlide();
+                    } else if (isActive && art.projectId && onSelectArtwork) {
+                      onSelectArtwork(art.projectId, art.artworkIndex ?? 0);
+                    }
+                  }}
+                  style={{
+                    transform: transformStyle,
+                    zIndex: isActive ? 30 : isPrev || isNext ? 20 : 10,
+                  }}
+                  className={`absolute inset-0 w-full h-full overflow-hidden bg-[#0c0c14] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                    isVisible ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'
+                  } ${
+                    isActive
+                      ? 'shadow-[0_38px_90px_-15px_rgba(10,10,22,0.72),0_18px_40px_-10px_rgba(10,10,22,0.45)] group'
+                      : 'shadow-[0_20px_50px_-12px_rgba(10,10,22,0.45)] group/side'
+                  }`}
+                >
+                  {art.imageUrl ? (
+                    <img
+                      src={art.imageUrl}
+                      alt={`${art.title} ${art.subtitle}`}
+                      className="w-full h-full object-cover select-none"
+                      draggable={false}
+                    />
+                  ) : (
+                    /* Placeholder 16:9 trực tiếp */
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center bg-[#0d0d16] border border-white/[0.06]">
+                      <div className="w-14 h-14 bg-white/[0.03] border border-white/10 flex items-center justify-center text-zinc-500">
+                        <ImageIcon className="w-7 h-7" />
+                      </div>
+                      <span className="font-mono text-xs sm:text-sm text-zinc-300 uppercase tracking-widest">
+                        {lang === 'vi'
+                          ? `SLIDE #0${idx + 1} — ẢNH 2D ARTWORK NGANG (16:9)`
+                          : `SLIDE #0${idx + 1} — WIDESCREEN 2D ARTWORK (16:9)`}
+                      </span>
+                      <span className="font-mono text-xs text-zinc-500">
+                        1920 × 1080
                       </span>
                     </div>
-                  </>
-                )}
+                  )}
 
-                {/* Hiệu ứng làm mờ & tối nhẹ lan tỏa tự nhiên ở góc dưới bên trái để làm nổi chữ */}
-                <div className="absolute bottom-0 left-0 w-[420px] h-44 bg-gradient-to-tr from-black/85 via-black/45 to-transparent blur-md pointer-events-none" />
+                  {/* Lớp phủ làm tối nhẹ cho 2 ảnh ở rìa (trạng thái bị che khuất), sáng lên khi rê chuột vào */}
+                  {!isActive && (
+                    <div className="absolute inset-0 bg-black/55 group-hover/side:bg-black/25 transition-colors duration-300" />
+                  )}
 
-                {/* Nhãn thông tin góc dưới bên trái không có khung viền */}
-                <div className="absolute bottom-5 left-6 sm:bottom-7 sm:left-8 pointer-events-none">
-                  <h2 className="font-display text-xl sm:text-3xl font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-                    {art.title}
-                  </h2>
-                  <p className="font-sans text-xs sm:text-sm text-zinc-300 font-light tracking-wide mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                    {art.subtitle}
-                  </p>
+                  {/* Nội dung chữ trên ảnh chính (ẩn đi khi ảnh đang ở rìa che khuất) */}
+                  <div
+                    className={`transition-opacity duration-500 ${
+                      isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    {/* Góc trên bên trái: Tên dự án kèm hiệu ứng mờ đen */}
+                    {art.project && (
+                      <>
+                        <div className="absolute top-0 left-0 w-[360px] h-36 bg-gradient-to-br from-black/85 via-black/45 to-transparent blur-md pointer-events-none" />
+                        <div className="absolute top-5 left-6 sm:top-7 sm:left-8 pointer-events-none">
+                          <span className="font-display text-lg sm:text-2xl font-bold text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+                            {art.project}
+                          </span>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Hiệu ứng làm mờ & tối nhẹ lan tỏa tự nhiên ở góc dưới bên trái để làm nổi chữ */}
+                    <div className="absolute bottom-0 left-0 w-[420px] h-44 bg-gradient-to-tr from-black/85 via-black/45 to-transparent blur-md pointer-events-none" />
+
+                    {/* Nhãn thông tin góc dưới bên trái không có khung viền */}
+                    <div className="absolute bottom-5 left-6 sm:bottom-7 sm:left-8 pointer-events-none">
+                      <h2 className="font-display text-xl sm:text-3xl font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+                        {art.title}
+                      </h2>
+                      <p className="font-sans text-xs sm:text-sm text-zinc-300 font-light tracking-wide mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                        {art.subtitle}
+                      </p>
+                    </div>
+
+                    {/* Nút điều hướng Trái / Phải nằm trên ảnh chính */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prevSlide();
+                      }}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-black/90 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      aria-label="Previous slide"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextSlide();
+                      }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-black/90 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      aria-label="Next slide"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-
-          {/* Nút điều hướng Trái / Phải */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-black/90 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-black/90 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-
         </div>
 
         {/* Thanh chấm chỉ báo (Pagination Dots) bên dưới trên nền sáng */}
@@ -210,8 +330,8 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
               onClick={() => setCurrentIndex(idx)}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 idx === currentIndex
-                  ? 'w-10 bg-purple-600'
-                  : 'w-2.5 bg-zinc-900/20 hover:bg-zinc-900/40'
+                  ? 'w-10 bg-zinc-900 shadow-[0_2px_8px_rgba(0,0,0,0.25)]'
+                  : 'w-2.5 bg-zinc-900/20 hover:bg-zinc-900/45'
               }`}
               aria-label={`Go to slide ${idx + 1}`}
             />

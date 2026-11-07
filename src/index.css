@@ -103,15 +103,35 @@
   }
 }
 
+@keyframes gallery-orb-float {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(28px, -18px, 0) scale(1.06);
+  }
+  66% {
+    transform: translate3d(-22px, 14px, 0) scale(0.95);
+  }
+}
+
+.animate-gallery-orb {
+  animation: gallery-orb-float 14s ease-in-out infinite;
+}
+
+.animate-gallery-orb-reverse {
+  animation: gallery-orb-float 18s ease-in-out infinite reverse;
+}
+
 .ripple-wave-move {
   position: absolute;
   width: 90px;
   height: 90px;
   border-radius: 9999px;
   pointer-events: none;
-  border: 1.5px solid rgba(124, 58, 237, 0.35);
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.04) 55%, transparent 70%);
-  box-shadow: 0 0 18px rgba(139, 92, 246, 0.2);
+  border: 1.5px solid rgba(24, 24, 38, 0.22);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, rgba(30, 30, 46, 0.05) 55%, transparent 70%);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.08);
   animation: css3-ripple-move 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -121,8 +141,8 @@
   height: 120px;
   border-radius: 9999px;
   pointer-events: none;
-  border: 2px solid rgba(109, 40, 217, 0.55);
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.22) 0%, rgba(139, 92, 246, 0.06) 55%, transparent 75%);
-  box-shadow: 0 0 28px rgba(124, 58, 237, 0.35), inset 0 0 15px rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(24, 24, 38, 0.38);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(24, 24, 38, 0.08) 55%, transparent 75%);
+  box-shadow: 0 0 28px rgba(0, 0, 0, 0.14), inset 0 0 15px rgba(255, 255, 255, 0.8);
   animation: css3-ripple-click 1.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

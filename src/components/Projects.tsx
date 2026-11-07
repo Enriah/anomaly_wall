@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Image as ImageIcon, BookOpen } from 'lucide-react';
+import { FINAL_STARS_STORY } from '../data/finalStarsStory';
 
 interface ProjectArtwork {
   id: string;
@@ -58,9 +59,12 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
   const [renderedProjectId, setRenderedProjectId] = useState<string | null>('finalstars');
   const [activeTab, setActiveTab] = useState<ProjectTab>('overview');
   const [selectedArtIndex, setSelectedArtIndex] = useState<number>(0);
+  const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
+  const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState<number>(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
   const sectionRef = useRef<HTMLElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const storyReaderRef = useRef<HTMLDivElement>(null);
   const scrollAnimRef = useRef<number | null>(null);
 
   // Hàm cuộn mượt động theo dõi chính xác vị trí phần tử đích và chiều cao thật của Navbar ở mỗi khung hình
@@ -98,6 +102,13 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
   const closeProjectDropdown = () => {
     setActiveProjectId(null);
     smoothScrollToElement(sectionRef.current, 650);
+  };
+
+  const handleSelectEpisode = (idx: number) => {
+    setSelectedEpisodeIndex(idx);
+    if (storyReaderRef.current) {
+      smoothScrollToElement(storyReaderRef.current, 500);
+    }
   };
 
   const projects: ProjectItem[] = [
@@ -541,32 +552,260 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                 )}
 
                 {/* 4. CỐT TRUYỆN (STORY / LORE) */}
-                {activeTab === 'story' && activeProject.story && (
-                  <div className="max-w-4xl space-y-6">
-                    <div className="space-y-2 border-l-2 border-white pl-4">
-                      <span className="font-mono text-[10px] uppercase tracking-widest text-white">
-                        {lang === 'vi' ? 'Tóm tắt thế giới quan' : 'World Synopsis'}
-                      </span>
-                      <p className="text-sm sm:text-base text-zinc-200 font-light leading-relaxed italic">
-                        "{activeProject.story.synopsis[lang]}"
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                      {activeProject.story.chapters.map((chapter, idx) => (
-                        <div
-                          key={idx}
-                          className="p-5 bg-white/[0.02] border border-white/10 space-y-2"
-                        >
-                          <h4 className="font-display text-lg font-bold text-white">
-                            {chapter.title[lang]}
-                          </h4>
-                          <p className="text-xs sm:text-sm text-zinc-400 font-light leading-relaxed">
-                            {chapter.content[lang]}
-                          </p>
+                {activeTab === 'story' && (
+                  <div className="max-w-5xl space-y-6" ref={storyReaderRef}>
+                    {activeProject.id === 'finalstars' ? (
+                      <>
+                        {/* Series Header */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+                          <div className="flex items-center gap-3">
+                            <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-zinc-100 bg-white/10 border border-white/30">
+                              {FINAL_STARS_STORY.seriesTitle}
+                            </span>
+                            <span className="text-xs font-mono text-zinc-400">
+                              {lang === 'vi'
+                                ? `${FINAL_STARS_STORY.chapters.length} Chương`
+                                : `${FINAL_STARS_STORY.chapters.length} Chapter(s)`}
+                            </span>
+                          </div>
+                          <span className="font-mono text-[11px] text-zinc-400">
+                            {lang === 'vi'
+                              ? 'Bấm vào chương để mở danh sách các tập'
+                              : 'Click on a chapter to view episodes'}
+                          </span>
                         </div>
-                      ))}
-                    </div>
+
+                        {/* Danh sách các Chương lớn (Chapters) */}
+                        <div className="space-y-4">
+                          {FINAL_STARS_STORY.chapters.map((chapter) => {
+                            const isChapterOpen = activeChapterId === chapter.id;
+                            const currentEp =
+                              chapter.episodes[selectedEpisodeIndex] || chapter.episodes[0];
+                            const hasPrev = selectedEpisodeIndex > 0;
+                            const hasNext = selectedEpisodeIndex < chapter.episodes.length - 1;
+
+                            const getEpisodeLabel = (epNumber: string, isSide: boolean) => {
+                              if (lang === 'vi') {
+                                return isSide
+                                  ? `Ngoại truyện ${epNumber.replace('Side Episode ', '')}`
+                                  : `Tập ${epNumber.replace('Episode ', '')}`;
+                              }
+                              return epNumber;
+                            };
+
+                            return (
+                              <div
+                                key={chapter.id}
+                                className={`border transition-all duration-300 ${
+                                  isChapterOpen
+                                    ? 'border-white bg-white/[0.02] shadow-[0_0_25px_rgba(255,255,255,0.07)]'
+                                    : 'border-white/15 bg-white/[0.01] hover:border-white/50 hover:bg-white/[0.03]'
+                                }`}
+                              >
+                                {/* Thẻ Chương lớn (Bấm vào để đóng/mở danh sách tập nhỏ) */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!isChapterOpen) {
+                                      setSelectedEpisodeIndex(0);
+                                    }
+                                    setActiveChapterId(isChapterOpen ? null : chapter.id);
+                                  }}
+                                  className="w-full text-left p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer"
+                                >
+                                  <div className="space-y-2 max-w-3xl">
+                                    <div className="flex items-center gap-3">
+                                      <span className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest bg-white text-black font-semibold">
+                                        {lang === 'vi'
+                                          ? `CHƯƠNG ${chapter.number}`
+                                          : `CHAPTER ${chapter.number}`}
+                                      </span>
+                                      <span className="text-xs font-mono text-zinc-400">
+                                        {lang === 'vi'
+                                          ? `${chapter.episodes.length} Tập`
+                                          : `${chapter.episodes.length} Episodes`}
+                                      </span>
+                                    </div>
+
+                                    <h3 className="font-display text-xl sm:text-2xl font-bold text-white tracking-wide">
+                                      {chapter.title[lang]}
+                                    </h3>
+                                  </div>
+
+                                  <div className="flex-shrink-0 self-start md:self-center">
+                                    <span
+                                      className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-mono uppercase tracking-wider border transition-all ${
+                                        isChapterOpen
+                                          ? 'bg-white text-black border-white font-semibold'
+                                          : 'border-white/25 text-zinc-200 hover:border-white hover:text-white'
+                                      }`}
+                                    >
+                                      <BookOpen className="w-3.5 h-3.5" />
+                                      <span>
+                                        {isChapterOpen
+                                          ? lang === 'vi'
+                                            ? 'Thu gọn chương'
+                                            : 'Hide Episodes'
+                                          : lang === 'vi'
+                                          ? 'Mở danh sách tập'
+                                          : 'View Episodes'}
+                                      </span>
+                                    </span>
+                                  </div>
+                                </button>
+
+                                {/* Khi bấm vào Chương lớn -> Hiện các Tập nhỏ và Khung đọc truyện */}
+                                {isChapterOpen && (
+                                  <div className="border-t border-white/15 p-5 sm:p-8 bg-black/50 space-y-6">
+                                    {/* Thanh chọn Tập nhỏ (Episodes) */}
+                                    <div className="space-y-3">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="font-mono text-xs uppercase tracking-widest text-white flex items-center gap-2">
+                                          <BookOpen className="w-3.5 h-3.5" />
+                                          {lang === 'vi'
+                                            ? 'Danh sách Tập (Episodes)'
+                                            : 'Select Episode'}
+                                        </h4>
+                                        <span className="font-mono text-xs text-zinc-400">
+                                          {selectedEpisodeIndex + 1} / {chapter.episodes.length}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2.5 bg-[#050509] border border-white/10">
+                                        {chapter.episodes.map((ep, idx) => {
+                                          const isActive = idx === selectedEpisodeIndex;
+                                          const isSide = ep.id.startsWith('side-');
+                                          return (
+                                            <button
+                                              key={ep.id}
+                                              type="button"
+                                              onClick={() => handleSelectEpisode(idx)}
+                                              className={`px-3 py-1.5 text-xs font-mono transition-all duration-200 border text-left flex items-center gap-2 cursor-pointer ${
+                                                isActive
+                                                  ? 'bg-white text-black font-semibold border-white shadow-[0_0_12px_rgba(255,255,255,0.4)]'
+                                                  : 'bg-white/[0.02] text-zinc-300 border-white/15 hover:border-white/40 hover:text-white hover:bg-white/[0.06]'
+                                              }`}
+                                            >
+                                              <span>{getEpisodeLabel(ep.number, isSide)}</span>
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+
+                                    {/* Nội dung Tập đang chọn */}
+                                    <div className="bg-[#07070d] border border-white/15 p-6 sm:p-10 shadow-2xl relative space-y-6">
+                                      {/* Tiêu đề Tập */}
+                                      <div className="border-b border-white/10 pb-5 space-y-1">
+                                        <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest">
+                                          {getEpisodeLabel(
+                                            currentEp.number,
+                                            currentEp.id.startsWith('side-')
+                                          )}
+                                        </span>
+                                        <h4 className="font-display text-xl sm:text-2xl font-bold text-white tracking-wide">
+                                          {currentEp.title[lang]}
+                                        </h4>
+                                      </div>
+
+                                      {/* Nội dung chữ */}
+                                      <div className="text-zinc-300 font-light leading-relaxed text-sm sm:text-base space-y-4 tracking-wide font-sans selection:bg-white/20 selection:text-white">
+                                        {currentEp.content.map((paragraph, pIdx) => (
+                                          <p
+                                            key={pIdx}
+                                            className="indent-4 sm:indent-6 leading-7 sm:leading-8"
+                                          >
+                                            {paragraph}
+                                          </p>
+                                        ))}
+                                      </div>
+
+                                      {/* Điều hướng Tập trước / Tập tiếp theo */}
+                                      <div className="border-t border-white/10 pt-6 flex flex-wrap items-center justify-between gap-4">
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            hasPrev &&
+                                            handleSelectEpisode(selectedEpisodeIndex - 1)
+                                          }
+                                          disabled={!hasPrev}
+                                          className={`flex items-center gap-2 px-4 py-2 text-xs font-mono uppercase tracking-wider border transition-all ${
+                                            hasPrev
+                                              ? 'border-white/20 text-zinc-200 hover:text-white hover:border-white hover:bg-white/5 cursor-pointer'
+                                              : 'border-white/5 text-zinc-600 cursor-not-allowed opacity-40'
+                                          }`}
+                                        >
+                                          <ChevronLeft className="w-4 h-4" />
+                                          <span>
+                                            {lang === 'vi' ? 'Tập trước' : 'Previous Episode'}
+                                          </span>
+                                        </button>
+
+                                        <span className="font-mono text-xs text-zinc-500">
+                                          {getEpisodeLabel(
+                                            currentEp.number,
+                                            currentEp.id.startsWith('side-')
+                                          )}{' '}
+                                          ({selectedEpisodeIndex + 1} / {chapter.episodes.length})
+                                        </span>
+
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            hasNext &&
+                                            handleSelectEpisode(selectedEpisodeIndex + 1)
+                                          }
+                                          disabled={!hasNext}
+                                          className={`flex items-center gap-2 px-4 py-2 text-xs font-mono uppercase tracking-wider border transition-all ${
+                                            hasNext
+                                              ? 'border-white/20 text-zinc-200 hover:text-white hover:border-white hover:bg-white/5 cursor-pointer'
+                                              : 'border-white/5 text-zinc-600 cursor-not-allowed opacity-40'
+                                          }`}
+                                        >
+                                          <span>
+                                            {lang === 'vi' ? 'Tập tiếp theo' : 'Next Episode'}
+                                          </span>
+                                          <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      activeProject.story && (
+                        <div className="space-y-6">
+                          <div className="space-y-2 border-l-2 border-white pl-4">
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-white">
+                              {lang === 'vi' ? 'Tóm tắt thế giới quan' : 'World Synopsis'}
+                            </span>
+                            <p className="text-sm sm:text-base text-zinc-200 font-light leading-relaxed italic">
+                              "{activeProject.story.synopsis[lang]}"
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            {activeProject.story.chapters.map((chapter, idx) => (
+                              <div
+                                key={idx}
+                                className="p-5 bg-white/[0.02] border border-white/10 space-y-2"
+                              >
+                                <h4 className="font-display text-lg font-bold text-white">
+                                  {chapter.title[lang]}
+                                </h4>
+                                <p className="text-xs sm:text-sm text-zinc-400 font-light leading-relaxed">
+                                  {chapter.content[lang]}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    )}
                   </div>
                 )}
 
