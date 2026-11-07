@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-color: #060609;
+    color: #f3f4f6;
+  }
+
+  /* Custom high-end scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #08080c;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #272738;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7c3aed;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+  .font-accent {
+    font-family: 'Syne', 'Cinzel', sans-serif;
+  }
+  .font-tech {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Glassmorphism effects */
+  .glass-panel {
+    background: rgba(16, 16, 24, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .glass-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  .text-glow-purple {
+    text-shadow: 0 0 24px rgba(168, 85, 247, 0.5);
+  }
+
+  .text-glow-cyan {
+    text-shadow: 0 0 24px rgba(6, 182, 212, 0.5);
+  }
+
+  .text-glow-coral {
+    text-shadow: 0 0 24px rgba(244, 63, 94, 0.5);
+  }
+
+  .bg-radial-gradient {
+    background: radial-gradient(circle at 50% 0%, rgba(120, 50, 220, 0.15) 0%, transparent 60%);
+  }
+
+  /* Grid overlay for high-tech aesthetic */
+  .bg-grid-pattern {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+}
+
+@keyframes css3-ripple-move {
+  0% {
+    transform: translate(-50%, -50%) scale(0.15);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.8);
+    opacity: 0;
+  }
+}
+
+@keyframes css3-ripple-click {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(4.5);
+    opacity: 0;
+  }
+}
+
+.ripple-wave-move {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 9999px;
+  pointer-events: none;
+  border: 1.5px solid rgba(124, 58, 237, 0.35);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.04) 55%, transparent 70%);
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.2);
+  animation: css3-ripple-move 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ripple-wave-click {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 9999px;
+  pointer-events: none;
+  border: 2px solid rgba(109, 40, 217, 0.55);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.22) 0%, rgba(139, 92, 246, 0.06) 55%, transparent 75%);
+  box-shadow: 0 0 28px rgba(124, 58, 237, 0.35), inset 0 0 15px rgba(255, 255, 255, 0.6);
+  animation: css3-ripple-click 1.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
