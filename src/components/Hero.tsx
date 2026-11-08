@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 
 interface ArtworkSlide {
   id: string;
@@ -44,6 +44,10 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [ripples, setRipples] = useState<RippleItem[]>([]);
+  const [dragOffset, setDragOffset] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const dragStartXRef = useRef<number>(0);
+  const hasDraggedRef = useRef<boolean>(false);
   const sectionRef = useRef<HTMLElement>(null);
   const lastMoveTimeRef = useRef<number>(0);
 
@@ -87,6 +91,70 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % artworks.length);
+  };
+
+  // Xử lý giữ chuột hoặc vuốt chạm để kéo đổi ảnh (Drag & Swipe)
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Chỉ kích hoạt với chuột trái (button = 0) hoặc cảm ứng
+    if (e.button !== 0) return;
+    setIsAutoPlay(false);
+    dragStartXRef.current = e.clientX;
+    hasDraggedRef.current = false;
+    setIsDragging(true);
+    setDragOffset(0);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Bỏ qua nếu trình duyệt không hỗ trợ pointer capture
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const currentX = e.clientX;
+    const diff = currentX - dragStartXRef.current;
+    if (Math.abs(diff) > 7) {
+      hasDraggedRef.current = true;
+    }
+    setDragOffset(diff);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // Bỏ qua
+    }
+    setIsDragging(false);
+    const threshold = 55; // Khoảng cách kéo tối thiểu (pixels) để chuyển slide
+    if (dragOffset < -threshold) {
+      nextSlide();
+    } else if (dragOffset > threshold) {
+      prevSlide();
+    }
+    setDragOffset(0);
+    // Giữ cờ hasDraggedRef trong 60ms để ngăn sự kiện onClick vô tình kích hoạt mở modal
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 60);
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // Bỏ qua
+    }
+    setIsDragging(false);
+    setDragOffset(0);
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 60);
   };
 
   const currentArtwork = artworks[currentIndex];
@@ -178,10 +246,18 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
       {/* Sân khấu Carousel toàn chiều ngang cho phép lộ rìa phải của ảnh trước (bên trái) và rìa trái của ảnh sau (bên phải) */}
       <div className="w-full space-y-5 relative z-10">
         <div
-          className="relative w-full"
+          className={`relative w-full touch-pan-y ${
+            isDragging ? 'cursor-grabbing' : 'cursor-grab'
+          }`}
           onMouseEnter={() => setIsAutoPlay(false)}
           onMouseMove={() => setIsAutoPlay(false)}
-          onMouseLeave={() => setIsAutoPlay(true)}
+          onMouseLeave={() => {
+            if (!isDragging) setIsAutoPlay(true);
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
         >
           {/* Khung định vị kích thước của Slide chính ở trung tâm */}
           <div className="relative w-[82vw] sm:w-[76vw] lg:w-[min(74vw,calc((100vh-152px)*16/9))] mx-auto aspect-video">
@@ -193,24 +269,26 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
               const isVisible = isActive || isPrev || isNext;
 
               // Vị trí dịch chuyển:
-              // - Slide chính (offset = 0): nằm chính giữa (translateX(0) scale(1))
-              // - Slide trước (offset = -1): dịch sang trái (-88%) và thu nhỏ nhẹ (scale(0.9)) để bị che khuất một phần dưới ảnh chính và chỉ lộ vùng bên phải của nó ở rìa trái
-              // - Slide sau (offset = 1): dịch sang phải (+88%) và thu nhỏ nhẹ (scale(0.9)) để chỉ lộ vùng bên trái của nó ở rìa phải
-              let transformStyle = 'translate3d(0%, 0, 0) scale(1)';
+              // - Slide chính (offset = 0): nằm chính giữa
+              // - Slide trước (offset = -1): dịch sang trái (-88%) và thu nhỏ nhẹ (scale(0.9))
+              // - Slide sau (offset = 1): dịch sang phải (+88%) và thu nhỏ nhẹ (scale(0.9))
+              // Kết hợp dragOffset trong quá trình giữ và kéo chuột
+              let transformStyle = `translate3d(calc(0% + ${dragOffset}px), 0, 0) scale(1)`;
               if (isPrev) {
-                transformStyle = 'translate3d(-88%, 0, 0) scale(0.9)';
+                transformStyle = `translate3d(calc(-88% + ${dragOffset}px), 0, 0) scale(0.9)`;
               } else if (isNext) {
-                transformStyle = 'translate3d(88%, 0, 0) scale(0.9)';
+                transformStyle = `translate3d(calc(88% + ${dragOffset}px), 0, 0) scale(0.9)`;
               } else if (offset < -1) {
-                transformStyle = 'translate3d(-170%, 0, 0) scale(0.82)';
+                transformStyle = `translate3d(calc(-170% + ${dragOffset}px), 0, 0) scale(0.82)`;
               } else if (offset > 1) {
-                transformStyle = 'translate3d(170%, 0, 0) scale(0.82)';
+                transformStyle = `translate3d(calc(170% + ${dragOffset}px), 0, 0) scale(0.82)`;
               }
 
               return (
                 <div
                   key={art.id}
                   onClick={() => {
+                    if (hasDraggedRef.current) return;
                     if (isPrev) {
                       prevSlide();
                     } else if (isNext) {
@@ -222,8 +300,11 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                   style={{
                     transform: transformStyle,
                     zIndex: isActive ? 30 : isPrev || isNext ? 20 : 10,
+                    transition: isDragging
+                      ? 'none'
+                      : 'transform 700ms cubic-bezier(0.22,1,0.36,1), opacity 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms cubic-bezier(0.22,1,0.36,1)',
                   }}
-                  className={`absolute inset-0 w-full h-full overflow-hidden bg-[#0c0c14] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  className={`absolute inset-0 w-full h-full overflow-hidden bg-[#0c0c14] select-none ${
                     isVisible ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'
                   } ${
                     isActive
@@ -235,7 +316,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                     <img
                       src={art.imageUrl}
                       alt={`${art.title} ${art.subtitle}`}
-                      className="w-full h-full object-cover select-none"
+                      className="w-full h-full object-cover select-none pointer-events-none"
                       draggable={false}
                     />
                   ) : (
@@ -291,30 +372,6 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                       </p>
                     </div>
 
-                    {/* Nút điều hướng Trái / Phải nằm trên ảnh chính */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        prevSlide();
-                      }}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-black/90 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                      aria-label="Previous slide"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        nextSlide();
-                      }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-black/90 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                      aria-label="Next slide"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
                   </div>
                 </div>
               );

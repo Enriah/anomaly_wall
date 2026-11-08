@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Image as ImageIcon, BookOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Image as ImageIcon, BookOpen, Folder, Maximize2, Layers } from 'lucide-react';
 import { FINAL_STARS_STORY } from '../data/finalStarsStory';
 
 interface ProjectArtwork {
@@ -7,6 +7,28 @@ interface ProjectArtwork {
   title: string;
   subtitle: string;
   imageUrl?: string;
+  aspectRatio?: 'landscape' | 'portrait' | 'square';
+  description?: {
+    vi: string;
+    en: string;
+  };
+}
+
+interface ProjectAlbum {
+  id: string;
+  title: {
+    vi: string;
+    en: string;
+  };
+  subtitle?: {
+    vi: string;
+    en: string;
+  };
+  description?: {
+    vi: string;
+    en: string;
+  };
+  artworks: ProjectArtwork[];
 }
 
 interface ProjectDevelopment {
@@ -38,12 +60,13 @@ interface ProjectItem {
     vi: string;
     en: string;
   };
+  albums?: ProjectAlbum[];
   artworks?: ProjectArtwork[];
   development?: ProjectDevelopment;
   story?: ProjectStory;
 }
 
-type ProjectTab = 'overview' | 'art' | 'development' | 'story';
+type ProjectTab = 'overview' | 'album' | 'development' | 'story';
 
 interface ProjectsProps {
   lang: 'vi' | 'en';
@@ -58,6 +81,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [renderedProjectId, setRenderedProjectId] = useState<string | null>('finalstars');
   const [activeTab, setActiveTab] = useState<ProjectTab>('overview');
+  const [selectedAlbumIndex, setSelectedAlbumIndex] = useState<number>(0);
   const [selectedArtIndex, setSelectedArtIndex] = useState<number>(0);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
   const [selectedEpisodeIndex, setSelectedEpisodeIndex] = useState<number>(0);
@@ -66,6 +90,54 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
   const dropdownRef = useRef<HTMLDivElement>(null);
   const storyReaderRef = useRef<HTMLDivElement>(null);
   const scrollAnimRef = useRef<number | null>(null);
+
+  // Refs và cơ chế kéo cuộn bằng con trỏ chuột (Drag-to-scroll) độc lập cho Album và Thư viện ảnh
+  const albumScrollRef = useRef<HTMLDivElement>(null);
+  const galleryScrollRef = useRef<HTMLDivElement>(null);
+  const hasAlbumDraggedRef = useRef<boolean>(false);
+  const hasGalleryDraggedRef = useRef<boolean>(false);
+
+  const createDragScrollHandler = (
+    targetRef: React.RefObject<HTMLDivElement | null>,
+    hasDraggedRef: React.MutableRefObject<boolean>
+  ) => {
+    return (e: React.MouseEvent<HTMLDivElement>) => {
+      // Chỉ nhận nút chuột trái (button = 0)
+      if (e.button !== 0) return;
+      const el = targetRef.current;
+      if (!el) return;
+
+      const startY = e.clientY;
+      const startScrollTop = el.scrollTop;
+      let hasMoved = false;
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const delta = moveEvent.clientY - startY;
+        if (Math.abs(delta) > 5) {
+          hasMoved = true;
+          hasDraggedRef.current = true;
+        }
+        if (hasMoved && targetRef.current) {
+          targetRef.current.scrollTop = startScrollTop - delta;
+        }
+      };
+
+      const handleMouseUp = () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        if (hasMoved) {
+          setTimeout(() => {
+            hasDraggedRef.current = false;
+          }, 80);
+        } else {
+          hasDraggedRef.current = false;
+        }
+      };
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    };
+  };
 
   // Hàm cuộn mượt động theo dõi chính xác vị trí phần tử đích và chiều cao thật của Navbar ở mỗi khung hình
   const smoothScrollToElement = (targetEl: HTMLElement | null, duration = 700) => {
@@ -121,6 +193,257 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
         vi: 'FinalStars là dự án game và vũ trụ nghệ thuật giả tưởng nguyên bản do Enriah & AnomalyWall phát triển, tập trung vào chiều sâu thế giới quan, thiết kế mỹ thuật 2D sắc nét và cơ chế nhập vai chiến thuật.',
         en: 'FinalStars is an original fantasy game and artistic universe developed by Enriah & AnomalyWall, focusing on deep world-building, atmospheric 2D art direction, and tactical RPG mechanics.',
       },
+      albums: [
+        {
+          id: 'album-saldevie',
+          title: {
+            vi: 'Khu Rừng Cấm Saldevie',
+            en: 'Saldevie Forbidden Forest',
+          },
+          subtitle: {
+            vi: 'Môi trường, Sinh thái & Khí quyển',
+            en: 'Environment, Ecology & Atmosphere',
+          },
+          description: {
+            vi: 'Khu rừng nguyên sinh Saldevie là nơi ẩn náu của các sinh linh cổ đại và là bức tường thành tự nhiên ngăn cách thế giới loài người với vùng đất cấm.',
+            en: 'The primordial forest of Saldevie serves as a sanctuary for ancient spirits and a natural boundary shielding the human realm from the forbidden lands.',
+          },
+          artworks: [
+            {
+              id: 'sal-1',
+              title: 'Saldevie',
+              subtitle: 'Forbidden Forest — Canopy of the Beast',
+              imageUrl: `${import.meta.env.BASE_URL}artworks/saldevie-forbidden-forest.jpg`,
+              aspectRatio: 'landscape',
+              description: {
+                vi: 'Khung cảnh đại ngàn Saldevie với bạch thú đang nằm nghỉ dưới tán thông già, nơi ánh sáng ban mai xuyên qua màn sương lạnh.',
+                en: 'The deep primordial canopy of Saldevie where the great white beast rests under ancient pines, with morning light filtering through dense mist.',
+              },
+            },
+            {
+              id: 'sal-2',
+              title: 'Sương Mù Ban Mai',
+              subtitle: 'Morning Mist & Canopy Study',
+              aspectRatio: 'portrait',
+              description: {
+                vi: 'Nghiên cứu góc chiếu ánh sáng buổi sớm len lỏi qua các tầng lá rậm rạp.',
+                en: 'Atmospheric study of dawn rays piercing through heavy woodland canopies.',
+              },
+            },
+            {
+              id: 'sal-3',
+              title: 'Hốc Cây Ngàn Năm',
+              subtitle: 'Ancient Hollow Root Sanctuary',
+              aspectRatio: 'square',
+              description: {
+                vi: 'Trú tích cổ xưa bên trong gốc cây đại thụ được các linh hồn bảo hộ.',
+                en: 'An ancient resting shelter carved inside millennium roots guarded by spirits.',
+              },
+            },
+            {
+              id: 'sal-4',
+              title: 'Lối Mòn Vách Đá',
+              subtitle: 'Cliffside Moss Path',
+              aspectRatio: 'landscape',
+              description: {
+                vi: 'Con đường đá bám đầy rêu phong dẫn lên đỉnh núi quan sát của người dẫn đường.',
+                en: 'Moss-covered cliffside trail leading up to the pathfinders lookout.',
+              },
+            },
+            {
+              id: 'sal-5',
+              title: 'Thảm Thực Vật Phát Quang',
+              subtitle: 'Bioluminescent Flora',
+              aspectRatio: 'portrait',
+              description: {
+                vi: 'Các loài nấm và hoa phát sáng tự nhiên vào ban đêm dẫn lối cho lữ khách.',
+                en: 'Luminescent flora and fungi that illuminate paths during twilight hours.',
+              },
+            },
+            {
+              id: 'sal-6',
+              title: 'Tổ Chim Khổng Lồ',
+              subtitle: 'Elder Roc Nesting Grounds',
+              aspectRatio: 'square',
+              description: {
+                vi: 'Khu vực làm tổ trên các ngọn đại thụ cao chọc trời nhìn ra toàn cảnh thung lũng.',
+                en: 'Nesting platforms on colossal treetops overlooking the vast woodland valley.',
+              },
+            },
+          ],
+        },
+        {
+          id: 'album-characters',
+          title: {
+            vi: 'Nhân Vật & Sinh Vật',
+            en: 'Characters & Creatures',
+          },
+          subtitle: {
+            vi: 'Tạo hình Enriah, Merin & Hộ vệ thần thoại',
+            en: 'Enriah, Merin & Mythical Guardians',
+          },
+          description: {
+            vi: 'Bản thiết kế tạo hình nhân vật, trang phục thám hiểm và các loài thú thần bí mang dấu ấn Tinh Cầu.',
+            en: 'Character concept designs, exploration gear, and mythical creatures carrying the Astral Crest.',
+          },
+          artworks: [
+            {
+              id: 'char-1',
+              title: 'Enriah — Người Canh Giữ',
+              subtitle: 'Main Protagonist Concept Sheet',
+              aspectRatio: 'portrait',
+              description: {
+                vi: 'Tạo hình Enriah trong bộ giáp du mục và áo choàng chống sương mù độc.',
+                en: 'Full concept sheet of Enriah featuring nomadic armor and mist-resistant cloak.',
+              },
+            },
+            {
+              id: 'char-2',
+              title: 'Bạch Thao Canh Cửa',
+              subtitle: 'White Forest Drake Study',
+              aspectRatio: 'landscape',
+              description: {
+                vi: 'Sinh vật huyền bí sở hữu bộ lông dày và đôi mắt nhìn thấu linh hồn kẻ xâm lấn.',
+                en: 'Mythical guardian drake with dense fur and eyes that pierce through astral deceit.',
+              },
+            },
+            {
+              id: 'char-3',
+              title: 'Bác Sĩ Vidir',
+              subtitle: 'Field Alchemist & Archivist',
+              aspectRatio: 'portrait',
+              description: {
+                vi: 'Nhà giả kim nghiên cứu độc tố thảo dược và tinh thể ma thuật.',
+                en: 'Field researcher studying herbal toxins and celestial mineral properties.',
+              },
+            },
+            {
+              id: 'char-4',
+              title: 'Merin — Kiếm Sĩ Gió',
+              subtitle: 'Windstrider Scout Stance',
+              aspectRatio: 'square',
+              description: {
+                vi: 'Bản phác thảo tư thế chiến đấu nhanh và chuyển động kiếm thuật.',
+                en: 'Action pose sketches highlighting rapid agility and swift blade techniques.',
+              },
+            },
+            {
+              id: 'char-5',
+              title: 'Cú Đêm Tinh Thể',
+              subtitle: 'Crystalline Nocturnal Scout',
+              aspectRatio: 'square',
+              description: {
+                vi: 'Loài chim trinh sát mang tinh thể phát sáng trên trán hỗ trợ định vị ban đêm.',
+                en: 'Nocturnal scout bird with forehead crystal aiding night flight navigation.',
+              },
+            },
+          ],
+        },
+        {
+          id: 'album-architecture',
+          title: {
+            vi: 'Kiến Trúc & Thành Trì',
+            en: 'Architecture & Citadels',
+          },
+          subtitle: {
+            vi: 'Hoàng thành Adious, Hải đăng Đen & Cảng Noha',
+            en: 'Adious Capital, Black Lighthouse & Noha Port',
+          },
+          description: {
+            vi: 'Công trình kiến trúc cổ kính đan xen giữa phong cách gothic cổ điển và công nghệ tinh thạch năng lượng.',
+            en: 'Monolithic architectural blueprints blending classical gothic grandeur with crystalline power structures.',
+          },
+          artworks: [
+            {
+              id: 'arch-1',
+              title: 'Hoàng Thành Adious',
+              subtitle: 'The Imperial Citadel Gates',
+              aspectRatio: 'landscape',
+              description: {
+                vi: 'Cổng thành sừng sững cao hơn 80 mét bảo vệ thủ phủ phương bắc.',
+                en: 'Colossal fortified gateway standing 80 meters tall guarding northern dominions.',
+              },
+            },
+            {
+              id: 'arch-2',
+              title: 'Hải Đăng Đen',
+              subtitle: 'The Black Lighthouse Tower',
+              aspectRatio: 'portrait',
+              description: {
+                vi: 'Ngọn tháp phát sáng luồng ánh sáng xanh lam dẫn lối cho tàu thuyền vượt qua bão sương mù.',
+                en: 'Obsidian tower casting cyan beacons guiding vessels across treacherous fog tides.',
+              },
+            },
+            {
+              id: 'arch-3',
+              title: 'Khu Phố Cảng Noha',
+              subtitle: 'Noha Harbor Waterway District',
+              aspectRatio: 'landscape',
+              description: {
+                vi: 'Khu buôn bán sầm uất với những cây cầu gỗ treo và xưởng đóng tàu cổ.',
+                en: 'Bustling maritime marketplace linked by suspended wooden bridges and docks.',
+              },
+            },
+            {
+              id: 'arch-4',
+              title: 'Hầm Trú Ẩn Ivelf',
+              subtitle: 'Underground Vault & Archives',
+              aspectRatio: 'square',
+              description: {
+                vi: 'Kho tàng dưới lòng đất nơi lưu giữ các văn bản lịch sử cổ xưa.',
+                en: 'Subterranean archives preserving millennia of astronomical records.',
+              },
+            },
+          ],
+        },
+        {
+          id: 'album-visuals',
+          title: {
+            vi: 'Key Visuals & Minh Họa',
+            en: 'Key Visuals & Illustrations',
+          },
+          subtitle: {
+            vi: 'Áp phích chính thức & Bìa tiểu thuyết',
+            en: 'Official Posters & Novel Covers',
+          },
+          description: {
+            vi: 'Các bức tranh minh họa hoàn thiện dành cho quảng bá dự án và các trang bìa artbook.',
+            en: 'Finished high-resolution illustrations for key visuals, artbooks, and novel chapters.',
+          },
+          artworks: [
+            {
+              id: 'vis-1',
+              title: 'The End to the Beginning',
+              subtitle: 'Official Teaser Visual',
+              aspectRatio: 'portrait',
+              description: {
+                vi: 'Áp phích biểu tượng khắc họa khoảnh khắc ngôi sao cuối cùng rơi xuống vòm trời.',
+                en: 'Flagship teaser visual illustrating the moment the last star descends onto the skyline.',
+              },
+            },
+            {
+              id: 'vis-2',
+              title: 'Dấu Ấn Tinh Cầu',
+              subtitle: 'Astral Crest Awakening',
+              aspectRatio: 'square',
+              description: {
+                vi: 'Minh họa khoảnh khắc kích hoạt vòng cổ chứa mảnh thiên thạch nguyên bản.',
+                en: 'Close-up composition of the celestial meteorite amulet resonance.',
+              },
+            },
+            {
+              id: 'vis-3',
+              title: 'Cây Vĩnh Hằng Trong Bão',
+              subtitle: 'The Everbranch in Winter Gale',
+              aspectRatio: 'landscape',
+              description: {
+                vi: 'Tranh toàn cảnh cây thế giới giữa cơn bão tuyết vĩnh cửu.',
+                en: 'Wide panoramic scene depicting the world tree enduring an eternal blizzard.',
+              },
+            },
+          ],
+        },
+      ],
       artworks: [
         {
           id: 'art-1',
@@ -205,7 +528,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
   const isOpenDropdown = activeProjectId !== null;
   const activeProject = projects.find((p) => p.id === (activeProjectId || renderedProjectId));
 
-  // Tự động mở dự án, chuyển sang tab Art và chọn đúng ảnh khi bấm từ Slider phía trên
+  // Tự động mở dự án, chuyển sang tab Album và chọn đúng ảnh khi bấm từ Slider phía trên
   useEffect(() => {
     if (!externalSelection) return;
     const targetProject = projects.find((p) => p.id === externalSelection.projectId);
@@ -213,8 +536,28 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
 
     setRenderedProjectId(targetProject.id);
     setActiveProjectId(targetProject.id);
-    setActiveTab('art');
-    setSelectedArtIndex(externalSelection.artworkIndex);
+    setActiveTab('album');
+
+    // Xác định album và ảnh tương ứng với artworkIndex được truyền vào
+    const artIdx = externalSelection.artworkIndex;
+    if (targetProject.albums && targetProject.albums.length > 0) {
+      let foundAlbumIdx = 0;
+      let foundArtIdx = 0;
+      let cumulative = 0;
+      for (let i = 0; i < targetProject.albums.length; i++) {
+        const count = targetProject.albums[i].artworks.length;
+        if (artIdx < cumulative + count) {
+          foundAlbumIdx = i;
+          foundArtIdx = artIdx - cumulative;
+          break;
+        }
+        cumulative += count;
+      }
+      setSelectedAlbumIndex(foundAlbumIdx);
+      setSelectedArtIndex(foundArtIdx);
+    } else {
+      setSelectedArtIndex(artIdx);
+    }
 
     requestAnimationFrame(() => {
       smoothScrollToElement(dropdownRef.current, 780);
@@ -229,6 +572,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
       setRenderedProjectId(project.id);
       setActiveProjectId(project.id);
       setActiveTab('overview');
+      setSelectedAlbumIndex(0);
       setSelectedArtIndex(0);
       requestAnimationFrame(() => {
         smoothScrollToElement(dropdownRef.current, 720);
@@ -242,8 +586,8 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
       label: { vi: 'Mô tả dự án', en: 'Overview' },
     },
     {
-      id: 'art',
-      label: { vi: 'Art', en: 'Art' },
+      id: 'album',
+      label: { vi: 'Album', en: 'Album' },
     },
     {
       id: 'development',
@@ -346,14 +690,18 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
         <div className="overflow-hidden min-h-0 w-full">
           {activeProject && (
             <div
-              className={`w-full min-h-[calc(100vh-58px)] flex flex-col border-t border-white/10 bg-[#0b0b14] px-4 sm:px-8 lg:px-14 py-8 sm:py-10 relative shadow-[inset_0_20px_40px_-15px_rgba(0,0,0,0.9)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              className={`w-full ${
+                activeTab === 'album'
+                  ? 'h-[calc(100vh-58px)] max-h-[calc(100vh-58px)] overflow-hidden'
+                  : 'min-h-[calc(100vh-58px)]'
+              } flex flex-col border-t border-white/10 bg-[#0b0b14] px-4 sm:px-8 lg:px-14 py-4 sm:py-5 relative shadow-[inset_0_20px_40px_-15px_rgba(0,0,0,0.9)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 isOpenDropdown ? 'translate-y-0' : '-translate-y-4'
               }`}
             >
-              <div className="max-w-[1800px] w-full mx-auto flex-1 flex flex-col">
+              <div className="max-w-[1800px] w-full mx-auto flex-1 flex flex-col min-h-0 overflow-hidden">
                 
                 {/* Thanh điều hướng các tính năng (Tabs) + Nút đóng */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-3 mb-8">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-2.5 mb-3.5 flex-shrink-0">
                   <div className="flex flex-wrap items-center gap-7">
                     {tabs.map((tab) => {
                       const isTabActive = activeTab === tab.id;
@@ -404,126 +752,296 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                   </div>
                 )}
 
-                {/* 2. ART (ALBUM TRƯNG BÀY CÁC ARTWORK THUỘC DỰ ÁN: TRÁI THUMBNAIL DỌC - GIỮA ẢNH CHÍNH - PHẢI MÔ TẢ) */}
-                {activeTab === 'art' && activeProject.artworks && activeProject.artworks.length > 0 && (() => {
-                  const artworks = activeProject.artworks;
-                  const currentArt = artworks[selectedArtIndex] || artworks[0];
-                  const prevArt = () => setSelectedArtIndex((prev) => (prev - 1 + artworks.length) % artworks.length);
-                  const nextArt = () => setSelectedArtIndex((prev) => (prev + 1) % artworks.length);
+                {/* 2. ALBUM (TRƯNG BÀY CÁC ALBUM & THƯ VIỆN ẢNH ĐIỆN THOẠI) */}
+                {activeTab === 'album' && (() => {
+                  const albums = activeProject.albums || [];
+                  const currentAlbum = albums[selectedAlbumIndex] || albums[0];
+                  const albumArtworks = currentAlbum ? currentAlbum.artworks : (activeProject.artworks || []);
+                  const currentArt = albumArtworks[selectedArtIndex] || albumArtworks[0];
+
+                  const prevArt = (e?: React.MouseEvent) => {
+                    e?.stopPropagation();
+                    setSelectedArtIndex((prev) => (prev - 1 + albumArtworks.length) % albumArtworks.length);
+                  };
+                  const nextArt = (e?: React.MouseEvent) => {
+                    e?.stopPropagation();
+                    setSelectedArtIndex((prev) => (prev + 1) % albumArtworks.length);
+                  };
 
                   return (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch overflow-hidden pb-1">
                       
-                      {/* CỘT TRÁI (2/12): Thanh danh sách ảnh thu nhỏ xếp dọc */}
-                      <div className="lg:col-span-2 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto lg:max-h-[560px] pr-1">
-                        {artworks.map((art, idx) => {
-                          const isSelected = idx === selectedArtIndex;
-                          return (
-                            <button
-                              key={art.id}
-                              onClick={() => setSelectedArtIndex(idx)}
-                              className={`group relative w-36 lg:w-full flex-shrink-0 aspect-video overflow-hidden border text-left transition-all duration-300 ${
-                                isSelected
-                                  ? 'border-white ring-2 ring-white/30 z-10'
-                                  : 'border-white/10 opacity-50 hover:opacity-100 hover:border-white/40'
-                              }`}
-                            >
-                              {art.imageUrl ? (
-                                <img
-                                  src={art.imageUrl}
-                                  alt={art.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-[#090912] flex flex-col items-center justify-center gap-1 text-zinc-600">
-                                  <ImageIcon className="w-4 h-4" />
-                                  <span className="font-mono text-[9px] uppercase tracking-wider">
-                                    #{idx + 1}
+                      {/* THANH DỌC BÊN TRÁI (3/12): Danh sách các Album của dự án */}
+                      <div className="lg:col-span-3 h-full flex flex-col min-h-0 overflow-hidden">
+                        <div className="flex items-center justify-between pb-2 border-b border-white/10 flex-shrink-0 mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <Folder className="w-4 h-4 text-white" />
+                            <span className="font-mono text-xs uppercase tracking-wider text-zinc-300 font-semibold">
+                              {lang === 'vi' ? 'Danh Sách Album' : 'Albums'}
+                            </span>
+                          </div>
+                          <span className="font-mono text-[11px] text-zinc-500">
+                            {albums.length} {lang === 'vi' ? 'album' : 'albums'}
+                          </span>
+                        </div>
+
+                        {/* Danh sách cuộn độc lập: hỗ trợ cả cuộn chuột (wheel) và giữ kéo chuột (drag-to-scroll) */}
+                        <div
+                          ref={albumScrollRef}
+                          onMouseDown={createDragScrollHandler(albumScrollRef, hasAlbumDraggedRef)}
+                          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col gap-1 pr-1.5 select-none cursor-grab active:cursor-grabbing"
+                        >
+                          {albums.map((album, idx) => {
+                            const isSelected = idx === selectedAlbumIndex;
+                            return (
+                              <button
+                                key={album.id}
+                                onClick={() => {
+                                  if (hasAlbumDraggedRef.current) return;
+                                  setSelectedAlbumIndex(idx);
+                                  setSelectedArtIndex(0);
+                                  if (galleryScrollRef.current) {
+                                    galleryScrollRef.current.scrollTop = 0;
+                                  }
+                                }}
+                                className={`group relative text-left px-3.5 py-3 transition-colors duration-200 flex-shrink-0 w-full border border-transparent select-none ${
+                                  isSelected
+                                    ? 'bg-white/[0.06] text-white border-l-2 !border-l-white'
+                                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.025]'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-3 pointer-events-none">
+                                  <div className="min-w-0 flex-1 space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Layers className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                                      <h4 className={`font-display text-sm font-semibold truncate ${
+                                        isSelected ? 'text-white' : 'text-zinc-300 group-hover:text-white'
+                                      }`}>
+                                        {album.title[lang]}
+                                      </h4>
+                                    </div>
+                                    {album.subtitle && (
+                                      <p className="text-[11px] text-zinc-500 line-clamp-1 font-light pl-5.5">
+                                        {album.subtitle[lang]}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <span className={`text-[11px] font-mono flex-shrink-0 mt-0.5 ${
+                                    isSelected
+                                      ? 'text-zinc-200 font-medium'
+                                      : 'text-zinc-500 group-hover:text-zinc-400'
+                                  }`}>
+                                    {album.artworks.length} {lang === 'vi' ? 'ảnh' : 'photos'}
                                   </span>
                                 </div>
-                              )}
-                              <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-                                <p className="font-display text-[11px] font-semibold text-white truncate">
-                                  {art.title}
-                                </p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* PHẦN Ở GIỮA (9/12): Thư viện ảnh cuộn độc lập: hỗ trợ cả cuộn chuột (wheel) và giữ kéo chuột (drag-to-scroll) */}
+                      <div
+                        ref={galleryScrollRef}
+                        onMouseDown={createDragScrollHandler(galleryScrollRef, hasGalleryDraggedRef)}
+                        className="lg:col-span-9 h-full min-h-0 overflow-y-auto overflow-x-hidden pr-2 select-none cursor-grab active:cursor-grabbing"
+                      >
+                        <div className="columns-1 sm:columns-2 xl:columns-3 gap-1.5 space-y-1.5 pb-6">
+                          {albumArtworks.map((art, artIdx) => {
+                            const ratioClass =
+                              art.aspectRatio === 'portrait'
+                                ? 'aspect-[3/4]'
+                                : art.aspectRatio === 'square'
+                                ? 'aspect-square'
+                                : 'aspect-video';
+
+                            const ratioBadge =
+                              art.aspectRatio === 'portrait'
+                                ? (lang === 'vi' ? 'Dọc (3:4)' : 'Portrait 3:4')
+                                : art.aspectRatio === 'square'
+                                ? (lang === 'vi' ? 'Vuông (1:1)' : 'Square 1:1')
+                                : (lang === 'vi' ? 'Ngang (16:9)' : 'Landscape 16:9');
+
+                            return (
+                              <div
+                                key={art.id}
+                                onClick={() => {
+                                  if (hasGalleryDraggedRef.current) return;
+                                  setSelectedArtIndex(artIdx);
+                                  setIsLightboxOpen(true);
+                                }}
+                                className="break-inside-avoid group relative cursor-pointer overflow-hidden rounded-none bg-[#090913] border border-white/10 transition-all duration-300 ease-out hover:z-20 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.95),0_0_24px_rgba(255,255,255,0.15)] hover:border-white/50 select-none"
+                              >
+                                <div className={`w-full ${ratioClass} relative overflow-hidden bg-[#0c0c16]`}>
+                                  {art.imageUrl ? (
+                                    <img
+                                      src={art.imageUrl}
+                                      alt={art.title}
+                                      draggable={false}
+                                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 pointer-events-none select-none"
+                                      loading="lazy"
+                                    />
+                                  ) : (
+                                    /* Thẻ tác phẩm mô phỏng tỉ lệ ảnh trong thư viện */
+                                    <div className="w-full h-full flex flex-col justify-between p-4 sm:p-5 bg-gradient-to-br from-[#161626] via-[#0d0d17] to-[#07070e] relative select-none pointer-events-none">
+                                      {/* Họa tiết lưới tọa độ mỹ thuật */}
+                                      <div
+                                        className="absolute inset-0 opacity-[0.05] pointer-events-none"
+                                        style={{
+                                          backgroundImage:
+                                            'linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)',
+                                          backgroundSize: '24px 24px',
+                                        }}
+                                      />
+
+                                      {/* Đầu thẻ: Huy hiệu tỉ lệ ảnh + Icon ảnh */}
+                                      <div className="flex items-center justify-between relative z-10 pointer-events-none">
+                                        <span className="font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-none bg-white/5 border border-white/15 text-zinc-300 group-hover:border-white/40 group-hover:text-white transition-colors">
+                                          {ratioBadge}
+                                        </span>
+                                        <div className="w-7 h-7 rounded-none bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:border-white/40 transition-colors">
+                                          <ImageIcon className="w-3.5 h-3.5" />
+                                        </div>
+                                      </div>
+
+                                      {/* Giữa thẻ: Tên tác phẩm & Mô tả ngắn */}
+                                      <div className="space-y-1.5 relative z-10 my-auto py-2 pointer-events-none">
+                                        <h4 className="font-display text-sm sm:text-base font-semibold text-white tracking-wide group-hover:text-zinc-100 transition-colors">
+                                          {art.title}
+                                        </h4>
+                                        <p className="font-sans text-xs text-zinc-400 line-clamp-2 font-light">
+                                          {art.subtitle}
+                                        </p>
+                                      </div>
+
+                                      {/* Đáy thẻ: Số thứ tự + Nút xem lớn */}
+                                      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 relative z-10 pt-2 border-t border-white/5 pointer-events-none">
+                                        <span>#{artIdx + 1 < 10 ? `0${artIdx + 1}` : artIdx + 1}</span>
+                                        <span className="group-hover:text-white transition-colors flex items-center gap-1 text-zinc-300">
+                                          <Maximize2 className="w-3 h-3" />
+                                          {lang === 'vi' ? 'Xem chi tiết' : 'Preview'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Lớp phủ hover khi có ảnh thật */}
+                                  {art.imageUrl && (
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 pointer-events-none">
+                                      <div className="flex items-end justify-between gap-2">
+                                        <div className="min-w-0">
+                                          <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-none bg-white/20 text-white mb-1.5 inline-block">
+                                            {ratioBadge}
+                                          </span>
+                                          <h4 className="font-display text-sm sm:text-base font-bold text-white truncate">
+                                            {art.title}
+                                          </h4>
+                                          <p className="font-sans text-xs text-zinc-300 font-light truncate">
+                                            {art.subtitle}
+                                          </p>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-none bg-black/70 border border-white/30 flex items-center justify-center text-white flex-shrink-0">
+                                          <Maximize2 className="w-4 h-4" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </button>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
 
-                      {/* CỘT GIỮA (7/12): Khung trưng bày ảnh chính thuần khiết không có chữ đè lên */}
-                      <div className="lg:col-span-7 relative w-full aspect-video bg-[#06060b] border border-white/10 shadow-[0_25px_60px_-10px_rgba(0,0,0,0.95)] overflow-hidden group">
-                        {currentArt.imageUrl ? (
-                          <img
-                            src={currentArt.imageUrl}
-                            alt={`${currentArt.title} ${currentArt.subtitle}`}
-                            onClick={() => setIsLightboxOpen(true)}
-                            className="w-full h-full object-cover cursor-zoom-in transition-transform duration-700"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-600 bg-[#08080f]">
-                            <ImageIcon className="w-10 h-10" />
-                          </div>
-                        )}
-
-                        {/* Nút lật trang Album Trái / Phải (ẩn mặc định, hiện khi di chuột) */}
-                        <button
-                          onClick={prevArt}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/65 hover:bg-black/90 backdrop-blur-md border border-white/15 flex items-center justify-center text-zinc-200 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                          aria-label="Previous artwork"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={nextArt}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/65 hover:bg-black/90 backdrop-blur-md border border-white/15 flex items-center justify-center text-zinc-200 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                          aria-label="Next artwork"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* CỘT PHẢI (3/12): Phần mô tả của bức ảnh đó */}
-                      <div className="lg:col-span-3 bg-white/[0.02] border border-white/10 p-6 flex flex-col justify-start">
-                        <h5 className="font-display text-lg font-bold text-white tracking-wide">
-                          {lang === 'vi' ? 'Mô tả' : 'Description'}
-                        </h5>
-                      </div>
-
-                      {/* Chế độ xem toàn màn hình (Lightbox Modal) khi bấm vào ảnh */}
-                      {isLightboxOpen && currentArt.imageUrl && (
+                      {/* Chế độ xem toàn màn hình (Lightbox Modal) như khi nhấn vào một bức ảnh trong điện thoại */}
+                      {isLightboxOpen && currentArt && (
                         <div
                           onClick={() => setIsLightboxOpen(false)}
-                          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 sm:p-10 cursor-zoom-out"
+                          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-3 sm:p-8 cursor-zoom-out"
                         >
+                          {/* Nút đóng */}
                           <button
                             onClick={() => setIsLightboxOpen(false)}
-                            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-colors"
+                            className="absolute top-5 right-5 sm:top-7 sm:right-7 w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition-colors z-20 cursor-pointer"
+                            aria-label="Close lightbox"
                           >
                             <X className="w-5 h-5" />
                           </button>
+
+                          {/* Nút lùi ảnh trong Album */}
+                          <button
+                            onClick={prevArt}
+                            className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/75 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-all z-20 cursor-pointer"
+                            aria-label="Previous photo"
+                          >
+                            <ChevronLeft className="w-6 h-6" />
+                          </button>
+
+                          {/* Nút tiến ảnh trong Album */}
+                          <button
+                            onClick={nextArt}
+                            className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/75 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-all z-20 cursor-pointer"
+                            aria-label="Next photo"
+                          >
+                            <ChevronRight className="w-6 h-6" />
+                          </button>
+
+                          {/* Khung nội dung ảnh phóng to */}
                           <div
                             onClick={(e) => e.stopPropagation()}
-                            className="relative max-w-6xl w-full space-y-3 cursor-default"
+                            className="relative max-w-5xl w-full flex flex-col items-center gap-4 cursor-default max-h-[92vh]"
                           >
-                            <img
-                              src={currentArt.imageUrl}
-                              alt={currentArt.title}
-                              className="w-full max-h-[82vh] object-contain shadow-2xl border border-white/10"
-                            />
-                            <div className="flex items-center justify-between text-white px-1">
-                              <div>
-                                <h4 className="font-display text-xl font-bold">
+                            <div className="relative w-full max-h-[75vh] flex items-center justify-center overflow-hidden rounded-none border border-white/10 bg-[#07070d]">
+                              {currentArt.imageUrl ? (
+                                <img
+                                  src={currentArt.imageUrl}
+                                  alt={currentArt.title}
+                                  className="w-auto h-auto max-w-full max-h-[75vh] object-contain shadow-2xl"
+                                />
+                              ) : (
+                                <div className="w-full h-80 sm:h-96 flex flex-col items-center justify-center gap-4 p-8 text-center bg-gradient-to-br from-[#181829] via-[#0d0d17] to-[#08080f]">
+                                  <div className="w-16 h-16 rounded-none bg-white/10 border border-white/20 flex items-center justify-center text-white">
+                                    <ImageIcon className="w-8 h-8" />
+                                  </div>
+                                  <div className="space-y-1 max-w-md">
+                                    <span className="font-mono text-xs uppercase tracking-widest text-zinc-400">
+                                      {currentArt.aspectRatio === 'portrait' ? '3:4 Portrait' : currentArt.aspectRatio === 'square' ? '1:1 Square' : '16:9 Landscape'}
+                                    </span>
+                                    <h3 className="font-display text-2xl font-bold text-white">
+                                      {currentArt.title}
+                                    </h3>
+                                    <p className="text-sm text-zinc-300 font-light">
+                                      {currentArt.subtitle}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Thanh thông tin ảnh bên dưới */}
+                            <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-white px-2">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-none bg-white/10 border border-white/20 text-zinc-300">
+                                    {currentAlbum?.title[lang]}
+                                  </span>
+                                  <span className="font-mono text-xs text-zinc-400">
+                                    #{selectedArtIndex + 1}
+                                  </span>
+                                </div>
+                                <h4 className="font-display text-lg sm:text-xl font-bold">
                                   {currentArt.title}
                                 </h4>
-                                <p className="text-xs text-zinc-400">
-                                  {currentArt.subtitle}
+                                <p className="text-xs sm:text-sm text-zinc-400 font-light">
+                                  {currentArt.description?.[lang] || currentArt.subtitle}
                                 </p>
                               </div>
-                              <span className="font-mono text-xs text-zinc-500">
-                                {selectedArtIndex + 1} / {artworks.length}
-                              </span>
+
+                              <div className="flex items-center gap-3 font-mono text-xs text-zinc-400 self-start sm:self-center flex-shrink-0">
+                                <span className="px-3 py-1 rounded-none bg-white/5 border border-white/10 text-white">
+                                  {selectedArtIndex + 1} / {albumArtworks.length}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -557,21 +1075,9 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                     {activeProject.id === 'finalstars' ? (
                       <>
                         {/* Series Header */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
-                          <div className="flex items-center gap-3">
-                            <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-zinc-100 bg-white/10 border border-white/30">
-                              {FINAL_STARS_STORY.seriesTitle}
-                            </span>
-                            <span className="text-xs font-mono text-zinc-400">
-                              {lang === 'vi'
-                                ? `${FINAL_STARS_STORY.chapters.length} Chương`
-                                : `${FINAL_STARS_STORY.chapters.length} Chapter(s)`}
-                            </span>
-                          </div>
-                          <span className="font-mono text-[11px] text-zinc-400">
-                            {lang === 'vi'
-                              ? 'Bấm vào chương để mở danh sách các tập'
-                              : 'Click on a chapter to view episodes'}
+                        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                          <span className="font-mono text-xs uppercase tracking-widest text-zinc-300 font-semibold">
+                            {FINAL_STARS_STORY.seriesTitle}
                           </span>
                         </div>
 
@@ -596,10 +1102,10 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                             return (
                               <div
                                 key={chapter.id}
-                                className={`border transition-all duration-300 ${
+                                className={`transition-all duration-300 ease-out border border-transparent ${
                                   isChapterOpen
-                                    ? 'border-white bg-white/[0.02] shadow-[0_0_25px_rgba(255,255,255,0.07)]'
-                                    : 'border-white/15 bg-white/[0.01] hover:border-white/50 hover:bg-white/[0.03]'
+                                    ? 'bg-white/[0.04] shadow-[0_10px_30px_rgba(0,0,0,0.6)]'
+                                    : 'bg-white/[0.015] hover:bg-white/[0.05] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.85),0_0_20px_rgba(255,255,255,0.06)]'
                                 }`}
                               >
                                 {/* Thẻ Chương lớn (Bấm vào để đóng/mở danh sách tập nhỏ) */}
@@ -611,9 +1117,9 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                                     }
                                     setActiveChapterId(isChapterOpen ? null : chapter.id);
                                   }}
-                                  className="w-full text-left p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer"
+                                  className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer"
                                 >
-                                  <div className="space-y-2 max-w-3xl">
+                                  <div className="space-y-2 max-w-4xl">
                                     <div className="flex items-center gap-3">
                                       <span className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest bg-white text-black font-semibold">
                                         {lang === 'vi'
@@ -630,27 +1136,6 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                                     <h3 className="font-display text-xl sm:text-2xl font-bold text-white tracking-wide">
                                       {chapter.title[lang]}
                                     </h3>
-                                  </div>
-
-                                  <div className="flex-shrink-0 self-start md:self-center">
-                                    <span
-                                      className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-mono uppercase tracking-wider border transition-all ${
-                                        isChapterOpen
-                                          ? 'bg-white text-black border-white font-semibold'
-                                          : 'border-white/25 text-zinc-200 hover:border-white hover:text-white'
-                                      }`}
-                                    >
-                                      <BookOpen className="w-3.5 h-3.5" />
-                                      <span>
-                                        {isChapterOpen
-                                          ? lang === 'vi'
-                                            ? 'Thu gọn chương'
-                                            : 'Hide Episodes'
-                                          : lang === 'vi'
-                                          ? 'Mở danh sách tập'
-                                          : 'View Episodes'}
-                                      </span>
-                                    </span>
                                   </div>
                                 </button>
 
