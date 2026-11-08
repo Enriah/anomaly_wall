@@ -47,7 +47,10 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
   const [dragOffset, setDragOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const dragStartXRef = useRef<number>(0);
+  const dragStartYRef = useRef<number>(0);
+  const isPointerDownRef = useRef<boolean>(false);
   const hasDraggedRef = useRef<boolean>(false);
+  const pointerIdRef = useRef<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const lastMoveTimeRef = useRef<number>(0);
 
@@ -93,68 +96,107 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
     setCurrentIndex((prev) => (prev + 1) % artworks.length);
   };
 
-  // Xử lý giữ chuột hoặc vuốt chạm để kéo đổi ảnh (Drag & Swipe)
+  // Xử lý giữ chuột hoặc vuốt chạm để kéo đổi ảnh (Drag & Swipe) đồng thời hỗ trợ nhấp chuột đổi ảnh
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // Chỉ kích hoạt với chuột trái (button = 0) hoặc cảm ứng
     if (e.button !== 0) return;
     setIsAutoPlay(false);
-    dragStartXRef.current = e.clientX;
+    isPointerDownRef.current = true;
     hasDraggedRef.current = false;
-    setIsDragging(true);
+    dragStartXRef.current = e.clientX;
+    dragStartYRef.current = e.clientY;
+    pointerIdRef.current = e.pointerId;
     setDragOffset(0);
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // Bỏ qua nếu trình duyệt không hỗ trợ pointer capture
-    }
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
+    if (!isPointerDownRef.current) return;
     const currentX = e.clientX;
-    const diff = currentX - dragStartXRef.current;
-    if (Math.abs(diff) > 7) {
-      hasDraggedRef.current = true;
+    const currentY = e.clientY;
+    const diffX = currentX - dragStartXRef.current;
+    const diffY = currentY - dragStartYRef.current;
+
+    // Chỉ chuyển sang trạng thái kéo (drag) khi người dùng di chuyển chuột hơn 8px theo chiều ngang
+    // Tránh việc nhấp chuột (click) thông thường bị coi là kéo
+    if (!hasDraggedRef.current) {
+      if (Math.abs(diffX) > 8 && Math.abs(diffX) >= Math.abs(diffY)) {
+        hasDraggedRef.current = true;
+        setIsDragging(true);
+        try {
+          if (pointerIdRef.current !== null && e.currentTarget) {
+            e.currentTarget.setPointerCapture(pointerIdRef.current);
+          }
+        } catch {
+          // Bỏ qua nếu trình duyệt không hỗ trợ pointer capture
+        }
+      }
     }
-    setDragOffset(diff);
+
+    if (hasDraggedRef.current) {
+      setDragOffset(diffX);
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+
+    const wasDragging = hasDraggedRef.current;
+    const finalOffset = dragOffset;
+
+    if (wasDragging) {
+      try {
+        if (pointerIdRef.current !== null && e.currentTarget?.hasPointerCapture(pointerIdRef.current)) {
+          e.currentTarget.releasePointerCapture(pointerIdRef.current);
+        }
+      } catch {
+        // Bỏ qua
       }
-    } catch {
-      // Bỏ qua
-    }
-    setIsDragging(false);
-    const threshold = 55; // Khoảng cách kéo tối thiểu (pixels) để chuyển slide
-    if (dragOffset < -threshold) {
-      nextSlide();
-    } else if (dragOffset > threshold) {
-      prevSlide();
-    }
-    setDragOffset(0);
-    // Giữ cờ hasDraggedRef trong 60ms để ngăn sự kiện onClick vô tình kích hoạt mở modal
-    setTimeout(() => {
+      setIsDragging(false);
+      setDragOffset(0);
+
+      const threshold = 50; // Khoảng cách kéo tối thiểu (pixels) để chuyển slide
+      if (finalOffset < -threshold) {
+        nextSlide();
+      } else if (finalOffset > threshold) {
+        prevSlide();
+      }
+
+      // Giữ cờ hasDraggedRef trong 80ms để ngăn sự kiện onClick vô tình kích hoạt mở modal
+      setTimeout(() => {
+        hasDraggedRef.current = false;
+      }, 80);
+    } else {
+      // Người dùng chỉ click chuột chứ không kéo
+      setIsDragging(false);
+      setDragOffset(0);
       hasDraggedRef.current = false;
-    }, 60);
+    }
+
+    pointerIdRef.current = null;
   };
 
   const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
+    isPointerDownRef.current = false;
+    if (hasDraggedRef.current) {
+      try {
+        if (pointerIdRef.current !== null && e.currentTarget?.hasPointerCapture(pointerIdRef.current)) {
+          e.currentTarget.releasePointerCapture(pointerIdRef.current);
+        }
+      } catch {
+        // Bỏ qua
       }
-    } catch {
-      // Bỏ qua
-    }
-    setIsDragging(false);
-    setDragOffset(0);
-    setTimeout(() => {
+      setIsDragging(false);
+      setDragOffset(0);
+      setTimeout(() => {
+        hasDraggedRef.current = false;
+      }, 80);
+    } else {
+      setIsDragging(false);
+      setDragOffset(0);
       hasDraggedRef.current = false;
-    }, 60);
+    }
+    pointerIdRef.current = null;
   };
 
   const currentArtwork = artworks[currentIndex];
@@ -170,6 +212,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
 
   return (
     <section
+      id="home"
       ref={sectionRef}
       onMouseMove={handleSectionMouseMove}
       onMouseDown={handleSectionClick}
@@ -247,7 +290,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
       <div className="w-full space-y-5 relative z-10">
         <div
           className={`relative w-full touch-pan-y ${
-            isDragging ? 'cursor-grabbing' : 'cursor-grab'
+            isDragging ? 'cursor-grabbing' : ''
           }`}
           onMouseEnter={() => setIsAutoPlay(false)}
           onMouseMove={() => setIsAutoPlay(false)}
@@ -287,7 +330,8 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
               return (
                 <div
                   key={art.id}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (hasDraggedRef.current) return;
                     if (isPrev) {
                       prevSlide();
@@ -309,7 +353,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                   } ${
                     isActive
                       ? 'shadow-[0_38px_90px_-15px_rgba(10,10,22,0.72),0_18px_40px_-10px_rgba(10,10,22,0.45)] group'
-                      : 'shadow-[0_20px_50px_-12px_rgba(10,10,22,0.45)] group/side'
+                      : 'shadow-[0_20px_50px_-12px_rgba(10,10,22,0.45)] group/side hover:shadow-[0_25px_60px_-10px_rgba(10,10,22,0.65)]'
                   }`}
                 >
                   {art.imageUrl ? (
@@ -321,7 +365,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                     />
                   ) : (
                     /* Placeholder 16:9 trực tiếp */
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center bg-[#0d0d16] border border-white/[0.06]">
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center bg-[#0d0d16] border border-white/[0.06] pointer-events-none">
                       <div className="w-14 h-14 bg-white/[0.03] border border-white/10 flex items-center justify-center text-zinc-500">
                         <ImageIcon className="w-7 h-7" />
                       </div>
@@ -338,7 +382,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
 
                   {/* Lớp phủ làm tối nhẹ cho 2 ảnh ở rìa (trạng thái bị che khuất), sáng lên khi rê chuột vào */}
                   {!isActive && (
-                    <div className="absolute inset-0 bg-black/55 group-hover/side:bg-black/25 transition-colors duration-300" />
+                    <div className="absolute inset-0 bg-black/55 group-hover/side:bg-black/25 transition-colors duration-300 pointer-events-none" />
                   )}
 
                   {/* Nội dung chữ trên ảnh chính (ẩn đi khi ảnh đang ở rìa che khuất) */}

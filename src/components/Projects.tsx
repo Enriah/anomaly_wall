@@ -603,27 +603,27 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
     <section
       id="projects"
       ref={sectionRef}
-      className="pt-12 pb-0 relative z-10 overflow-hidden flex flex-col justify-between"
+      className="pt-6 sm:pt-8 lg:pt-0 pb-0 relative z-10 overflow-hidden flex flex-col justify-between"
     >
-      <div className="w-full min-h-[calc(100vh-58px)] px-6 sm:px-12 lg:px-20 flex flex-col">
+      <div className="w-full min-h-[calc(100vh-58px)] lg:h-[calc(100vh-58px)] px-6 sm:px-12 lg:px-20 pt-4 sm:pt-6 lg:pt-5 pb-6 lg:pb-8 flex flex-col justify-between box-border">
         
         {/* Tiêu đề phần PROJECTS */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-5">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3 sm:pb-4 mb-4 sm:mb-6 flex-shrink-0">
           <h2 className="font-accent text-2xl sm:text-3xl font-black tracking-widest text-white uppercase">
             PROJECTS
           </h2>
         </div>
 
         {/* Dải 5 hình bình hành chéo: Xếp dọc nối khít nhau trên điện thoại (-skew-y-6) và xếp ngang trên máy tính (-skew-x-12) */}
-        <div className="px-2 sm:px-6 lg:px-12 py-6 lg:py-0 flex-1 flex flex-col">
-          <div className="flex flex-col lg:grid lg:grid-cols-5 gap-0 flex-1">
+        <div className="px-2 sm:px-6 lg:px-12 py-4 lg:py-0 flex-1 min-h-0 flex flex-col">
+          <div className="flex flex-col lg:grid lg:grid-cols-5 gap-0 flex-1 min-h-0">
             {projects.map((project) => {
               const isOpen = activeProjectId === project.id;
               return (
                 <div
                   key={project.id}
                   onClick={() => handleProjectClick(project)}
-                  className={`group relative h-28 sm:h-32 lg:h-full lg:min-h-[80vh] w-full -skew-y-6 lg:skew-y-0 lg:-skew-x-12 -mt-px first:mt-0 lg:mt-0 lg:-ml-px lg:first:ml-0 transition-all duration-300 ease-out overflow-hidden border-y border-x-0 lg:border-x lg:border-y-0 hover:z-30 hover:scale-y-[1.06] lg:hover:scale-y-100 lg:hover:scale-x-[1.05] hover:shadow-[0_0_50px_rgba(0,0,0,0.95),0_0_30px_rgba(255,255,255,0.2)] ${
+                  className={`group relative h-28 sm:h-32 lg:h-full w-full -skew-y-6 lg:skew-y-0 lg:-skew-x-12 -mt-px first:mt-0 lg:mt-0 lg:-ml-px lg:first:ml-0 transition-all duration-300 ease-out overflow-hidden border-y border-x-0 lg:border-x lg:border-y-0 hover:z-30 hover:scale-y-[1.06] lg:hover:scale-y-100 lg:hover:scale-x-[1.05] hover:shadow-[0_0_50px_rgba(0,0,0,0.95),0_0_30px_rgba(255,255,255,0.2)] lg:[mask-image:linear-gradient(to_bottom,transparent_0%,black_14%,black_88%,transparent_100%)] lg:[-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_14%,black_88%,transparent_100%)] ${
                     project.isComingSoon
                       ? 'bg-[#0b0b12]/95 border-white/[0.08] hover:bg-[#12121a] hover:border-white/60 cursor-default'
                       : isOpen
@@ -639,7 +639,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                         alt={project.title}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#090910] via-[#090910]/60 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#090910] via-[#090910]/40 to-[#090910]/80" />
                     </div>
                   )}
 
@@ -649,13 +649,13 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                   )}
 
                   {/* Khử độ nghiêng (un-skew) cho phần chữ bên trong */}
-                  <div className="skew-y-6 lg:skew-y-0 lg:skew-x-12 w-full h-full px-6 py-4 lg:px-8 lg:py-7 flex flex-col justify-center lg:justify-end relative z-10">
+                  <div className="skew-y-6 lg:skew-y-0 lg:skew-x-12 w-full h-full px-6 py-4 lg:px-8 lg:pb-10 lg:pt-6 flex flex-col justify-center lg:justify-end relative z-10">
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <h3
                           className={`font-display tracking-tight transition-colors ${
                             project.isComingSoon
-                              ? 'font-medium text-zinc-600 uppercase tracking-widest font-mono text-xs'
+                              ? 'font-medium text-zinc-400 group-hover:text-zinc-200 uppercase tracking-widest font-mono text-xs'
                               : 'text-2xl font-bold text-white group-hover:text-zinc-100'
                           }`}
                         >

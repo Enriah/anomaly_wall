@@ -55,6 +55,33 @@ export const Navbar: React.FC<NavbarProps> = ({
     scrollAnimRef.current = requestAnimationFrame(step);
   };
 
+  const smoothScrollToTop = (duration = 750) => {
+    if (scrollAnimRef.current) {
+      cancelAnimationFrame(scrollAnimRef.current);
+    }
+    const startY = window.scrollY;
+    if (startY === 0) return;
+    const startTime = performance.now();
+    const easeInOutCubic = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+
+      window.scrollTo(0, startY * (1 - eased));
+
+      if (progress < 1) {
+        scrollAnimRef.current = requestAnimationFrame(step);
+      } else {
+        scrollAnimRef.current = null;
+      }
+    };
+
+    scrollAnimRef.current = requestAnimationFrame(step);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 40);
@@ -133,11 +160,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           
           {/* Brand Name & Logo */}
           <a
-            href="#"
+            href="#home"
             onClick={(e) => {
+              e.preventDefault();
               if (onReplayIntro && window.scrollY < 40) {
-                e.preventDefault();
                 onReplayIntro();
+              } else {
+                smoothScrollToTop(750);
               }
             }}
             className="flex items-center gap-2 sm:gap-3 group min-w-0"
@@ -157,6 +186,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 sm:gap-5 flex-shrink-0">
+            {/* Nút cuộn lên đầu trang (Slider / Home) */}
+            <button
+              onClick={() => smoothScrollToTop(750)}
+              className="px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
+            >
+              Home
+            </button>
+
             {/* Nút cuộn xuống phần Project */}
             <button
               onClick={() => {
