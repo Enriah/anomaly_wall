@@ -195,11 +195,11 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
 
   return (
     <section
-      id="home"
+      id="slider"
       ref={sectionRef}
       onMouseMove={handleSectionMouseMove}
       onMouseDown={handleSectionClick}
-      className="relative min-h-screen pt-20 pb-6 flex flex-col justify-center overflow-hidden bg-gradient-to-b from-[#f3f3f7] via-[#e7e7ef] to-[#d6d6e2] select-none"
+      className="relative min-h-screen h-screen py-4 sm:py-6 flex flex-col justify-center overflow-hidden bg-gradient-to-b from-white via-[#f3f3f7] to-[#d6d6e2] select-none"
     >
       {/* 1. Lớp ánh sáng Studio Vignette tạo chiều sâu hướng tâm */}
       <div

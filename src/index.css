@@ -9,20 +9,36 @@
     color: #f3f4f6;
   }
 
-  /* Custom high-end scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  /* Ẩn hoàn toàn thanh cuộn (Scrollbar) ở rìa phải trang web trên mọi trình duyệt */
+  html,
+  body,
+  #root {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE & Edge */
   }
-  ::-webkit-scrollbar-track {
-    background: #08080c;
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  #root::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera, Edge */
+    width: 0 !important;
+    height: 0 !important;
   }
-  ::-webkit-scrollbar-thumb {
-    background: #272738;
+
+  /* Thanh cuộn tinh tế chỉ dành cho các khối nội dung cuộn bên trong nếu cần */
+  div::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  div::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  div::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.35);
+  div::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
   }
 }
 

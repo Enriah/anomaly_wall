@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { LandingHero } from './components/LandingHero';
 import { Hero } from './components/Hero';
 import { Projects } from './components/Projects';
 import { Footer } from './components/Footer';
@@ -79,7 +80,10 @@ export const App: React.FC = () => {
       />
 
       <main className="flex-1 flex flex-col justify-center">
-        {/* 2D Artwork Carousel / Slider Hero */}
+        {/* Phần đầu tiên hiển thị khi mở trang: Nền trắng và chữ AnomalyWall */}
+        <LandingHero lang={lang} />
+
+        {/* 2D Artwork Carousel / Slider chuyển xuống dưới */}
         <Hero
           lang={lang}
           onSelectArtwork={handleSelectArtworkFromSlider}

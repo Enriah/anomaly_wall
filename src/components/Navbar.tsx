@@ -186,12 +186,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 sm:gap-5 flex-shrink-0">
-            {/* Nút cuộn lên đầu trang (Slider / Home) */}
+            {/* Nút cuộn lên đầu trang (Home) */}
             <button
               onClick={() => smoothScrollToTop(750)}
               className="px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
             >
               {lang === 'vi' ? 'Trang chủ' : 'Home'}
+            </button>
+
+            {/* Nút cuộn xuống phần Slider / Bộ sưu tập */}
+            <button
+              onClick={() => {
+                const sliderEl = document.getElementById('slider');
+                smoothScrollToElement(sliderEl, 750);
+              }}
+              className="hidden sm:inline-block px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
+            >
+              {lang === 'vi' ? 'Bộ sưu tập' : 'Gallery'}
             </button>
 
             {/* Nút cuộn xuống phần Project */}
