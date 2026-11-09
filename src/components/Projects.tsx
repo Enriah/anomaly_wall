@@ -1,70 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Image as ImageIcon, BookOpen, Folder, Maximize2, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Image as ImageIcon, BookOpen, Folder, Maximize2, Layers, ExternalLink } from 'lucide-react';
 import { FINAL_STARS_STORY } from '../data/finalStarsStory';
+import {
+  PROJECTS_DATA,
+  ProjectItem,
+} from '../data/projectsData';
 
-interface ProjectArtwork {
-  id: string;
-  title: string;
-  subtitle: string;
-  imageUrl?: string;
-  aspectRatio?: 'landscape' | 'portrait' | 'square';
-  description?: {
-    vi: string;
-    en: string;
-  };
-}
-
-interface ProjectAlbum {
-  id: string;
-  title: {
-    vi: string;
-    en: string;
-  };
-  subtitle?: {
-    vi: string;
-    en: string;
-  };
-  description?: {
-    vi: string;
-    en: string;
-  };
-  artworks: ProjectArtwork[];
-}
-
-interface ProjectDevelopment {
-  tools: string[];
-  techStack: string[];
-  notes: {
-    vi: string;
-    en: string;
-  };
-}
-
-interface ProjectStory {
-  synopsis: {
-    vi: string;
-    en: string;
-  };
-  chapters: {
-    title: { vi: string; en: string };
-    content: { vi: string; en: string };
-  }[];
-}
-
-interface ProjectItem {
-  id: string;
-  title: string;
-  isComingSoon?: boolean;
-  tag?: string;
-  details?: {
-    vi: string;
-    en: string;
-  };
-  albums?: ProjectAlbum[];
-  artworks?: ProjectArtwork[];
-  development?: ProjectDevelopment;
-  story?: ProjectStory;
-}
+const getLocalized = (
+  val: string | { vi: string; en: string } | undefined,
+  currentLang: 'vi' | 'en'
+): string => {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  return val[currentLang] || val.vi || '';
+};
 
 type ProjectTab = 'overview' | 'album' | 'development' | 'story';
 
@@ -73,6 +22,8 @@ interface ProjectsProps {
   externalSelection?: {
     projectId: string;
     artworkIndex: number;
+    albumId?: string;
+    artworkId?: string;
     timestamp: number;
   } | null;
 }
@@ -183,347 +134,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
     }
   };
 
-  const projects: ProjectItem[] = [
-    {
-      id: 'finalstars',
-      title: 'FinalStars',
-      isComingSoon: false,
-      tag: 'game',
-      details: {
-        vi: 'FinalStars là dự án game và vũ trụ nghệ thuật giả tưởng nguyên bản do Enriah & AnomalyWall phát triển, tập trung vào chiều sâu thế giới quan, thiết kế mỹ thuật 2D sắc nét và cơ chế nhập vai chiến thuật.',
-        en: 'FinalStars is an original fantasy game and artistic universe developed by Enriah & AnomalyWall, focusing on deep world-building, atmospheric 2D art direction, and tactical RPG mechanics.',
-      },
-      albums: [
-        {
-          id: 'album-saldevie',
-          title: {
-            vi: 'Khu Rừng Cấm Saldevie',
-            en: 'Saldevie Forbidden Forest',
-          },
-          subtitle: {
-            vi: 'Môi trường, Sinh thái & Khí quyển',
-            en: 'Environment, Ecology & Atmosphere',
-          },
-          description: {
-            vi: 'Khu rừng nguyên sinh Saldevie là nơi ẩn náu của các sinh linh cổ đại và là bức tường thành tự nhiên ngăn cách thế giới loài người với vùng đất cấm.',
-            en: 'The primordial forest of Saldevie serves as a sanctuary for ancient spirits and a natural boundary shielding the human realm from the forbidden lands.',
-          },
-          artworks: [
-            {
-              id: 'sal-1',
-              title: 'Saldevie',
-              subtitle: 'Forbidden Forest — Canopy of the Beast',
-              imageUrl: `${import.meta.env.BASE_URL}artworks/saldevie-forbidden-forest.jpg`,
-              aspectRatio: 'landscape',
-              description: {
-                vi: 'Khung cảnh đại ngàn Saldevie với bạch thú đang nằm nghỉ dưới tán thông già, nơi ánh sáng ban mai xuyên qua màn sương lạnh.',
-                en: 'The deep primordial canopy of Saldevie where the great white beast rests under ancient pines, with morning light filtering through dense mist.',
-              },
-            },
-            {
-              id: 'sal-2',
-              title: 'Sương Mù Ban Mai',
-              subtitle: 'Morning Mist & Canopy Study',
-              aspectRatio: 'portrait',
-              description: {
-                vi: 'Nghiên cứu góc chiếu ánh sáng buổi sớm len lỏi qua các tầng lá rậm rạp.',
-                en: 'Atmospheric study of dawn rays piercing through heavy woodland canopies.',
-              },
-            },
-            {
-              id: 'sal-3',
-              title: 'Hốc Cây Ngàn Năm',
-              subtitle: 'Ancient Hollow Root Sanctuary',
-              aspectRatio: 'square',
-              description: {
-                vi: 'Trú tích cổ xưa bên trong gốc cây đại thụ được các linh hồn bảo hộ.',
-                en: 'An ancient resting shelter carved inside millennium roots guarded by spirits.',
-              },
-            },
-            {
-              id: 'sal-4',
-              title: 'Lối Mòn Vách Đá',
-              subtitle: 'Cliffside Moss Path',
-              aspectRatio: 'landscape',
-              description: {
-                vi: 'Con đường đá bám đầy rêu phong dẫn lên đỉnh núi quan sát của người dẫn đường.',
-                en: 'Moss-covered cliffside trail leading up to the pathfinders lookout.',
-              },
-            },
-            {
-              id: 'sal-5',
-              title: 'Thảm Thực Vật Phát Quang',
-              subtitle: 'Bioluminescent Flora',
-              aspectRatio: 'portrait',
-              description: {
-                vi: 'Các loài nấm và hoa phát sáng tự nhiên vào ban đêm dẫn lối cho lữ khách.',
-                en: 'Luminescent flora and fungi that illuminate paths during twilight hours.',
-              },
-            },
-            {
-              id: 'sal-6',
-              title: 'Tổ Chim Khổng Lồ',
-              subtitle: 'Elder Roc Nesting Grounds',
-              aspectRatio: 'square',
-              description: {
-                vi: 'Khu vực làm tổ trên các ngọn đại thụ cao chọc trời nhìn ra toàn cảnh thung lũng.',
-                en: 'Nesting platforms on colossal treetops overlooking the vast woodland valley.',
-              },
-            },
-          ],
-        },
-        {
-          id: 'album-characters',
-          title: {
-            vi: 'Nhân Vật & Sinh Vật',
-            en: 'Characters & Creatures',
-          },
-          subtitle: {
-            vi: 'Tạo hình Enriah, Merin & Hộ vệ thần thoại',
-            en: 'Enriah, Merin & Mythical Guardians',
-          },
-          description: {
-            vi: 'Bản thiết kế tạo hình nhân vật, trang phục thám hiểm và các loài thú thần bí mang dấu ấn Tinh Cầu.',
-            en: 'Character concept designs, exploration gear, and mythical creatures carrying the Astral Crest.',
-          },
-          artworks: [
-            {
-              id: 'char-1',
-              title: 'Enriah — Người Canh Giữ',
-              subtitle: 'Main Protagonist Concept Sheet',
-              aspectRatio: 'portrait',
-              description: {
-                vi: 'Tạo hình Enriah trong bộ giáp du mục và áo choàng chống sương mù độc.',
-                en: 'Full concept sheet of Enriah featuring nomadic armor and mist-resistant cloak.',
-              },
-            },
-            {
-              id: 'char-2',
-              title: 'Bạch Thao Canh Cửa',
-              subtitle: 'White Forest Drake Study',
-              aspectRatio: 'landscape',
-              description: {
-                vi: 'Sinh vật huyền bí sở hữu bộ lông dày và đôi mắt nhìn thấu linh hồn kẻ xâm lấn.',
-                en: 'Mythical guardian drake with dense fur and eyes that pierce through astral deceit.',
-              },
-            },
-            {
-              id: 'char-3',
-              title: 'Bác Sĩ Vidir',
-              subtitle: 'Field Alchemist & Archivist',
-              aspectRatio: 'portrait',
-              description: {
-                vi: 'Nhà giả kim nghiên cứu độc tố thảo dược và tinh thể ma thuật.',
-                en: 'Field researcher studying herbal toxins and celestial mineral properties.',
-              },
-            },
-            {
-              id: 'char-4',
-              title: 'Merin — Kiếm Sĩ Gió',
-              subtitle: 'Windstrider Scout Stance',
-              aspectRatio: 'square',
-              description: {
-                vi: 'Bản phác thảo tư thế chiến đấu nhanh và chuyển động kiếm thuật.',
-                en: 'Action pose sketches highlighting rapid agility and swift blade techniques.',
-              },
-            },
-            {
-              id: 'char-5',
-              title: 'Cú Đêm Tinh Thể',
-              subtitle: 'Crystalline Nocturnal Scout',
-              aspectRatio: 'square',
-              description: {
-                vi: 'Loài chim trinh sát mang tinh thể phát sáng trên trán hỗ trợ định vị ban đêm.',
-                en: 'Nocturnal scout bird with forehead crystal aiding night flight navigation.',
-              },
-            },
-          ],
-        },
-        {
-          id: 'album-architecture',
-          title: {
-            vi: 'Kiến Trúc & Thành Trì',
-            en: 'Architecture & Citadels',
-          },
-          subtitle: {
-            vi: 'Hoàng thành Adious, Hải đăng Đen & Cảng Noha',
-            en: 'Adious Capital, Black Lighthouse & Noha Port',
-          },
-          description: {
-            vi: 'Công trình kiến trúc cổ kính đan xen giữa phong cách gothic cổ điển và công nghệ tinh thạch năng lượng.',
-            en: 'Monolithic architectural blueprints blending classical gothic grandeur with crystalline power structures.',
-          },
-          artworks: [
-            {
-              id: 'arch-1',
-              title: 'Hoàng Thành Adious',
-              subtitle: 'The Imperial Citadel Gates',
-              aspectRatio: 'landscape',
-              description: {
-                vi: 'Cổng thành sừng sững cao hơn 80 mét bảo vệ thủ phủ phương bắc.',
-                en: 'Colossal fortified gateway standing 80 meters tall guarding northern dominions.',
-              },
-            },
-            {
-              id: 'arch-2',
-              title: 'Hải Đăng Đen',
-              subtitle: 'The Black Lighthouse Tower',
-              aspectRatio: 'portrait',
-              description: {
-                vi: 'Ngọn tháp phát sáng luồng ánh sáng xanh lam dẫn lối cho tàu thuyền vượt qua bão sương mù.',
-                en: 'Obsidian tower casting cyan beacons guiding vessels across treacherous fog tides.',
-              },
-            },
-            {
-              id: 'arch-3',
-              title: 'Khu Phố Cảng Noha',
-              subtitle: 'Noha Harbor Waterway District',
-              aspectRatio: 'landscape',
-              description: {
-                vi: 'Khu buôn bán sầm uất với những cây cầu gỗ treo và xưởng đóng tàu cổ.',
-                en: 'Bustling maritime marketplace linked by suspended wooden bridges and docks.',
-              },
-            },
-            {
-              id: 'arch-4',
-              title: 'Hầm Trú Ẩn Ivelf',
-              subtitle: 'Underground Vault & Archives',
-              aspectRatio: 'square',
-              description: {
-                vi: 'Kho tàng dưới lòng đất nơi lưu giữ các văn bản lịch sử cổ xưa.',
-                en: 'Subterranean archives preserving millennia of astronomical records.',
-              },
-            },
-          ],
-        },
-        {
-          id: 'album-visuals',
-          title: {
-            vi: 'Key Visuals & Minh Họa',
-            en: 'Key Visuals & Illustrations',
-          },
-          subtitle: {
-            vi: 'Áp phích chính thức & Bìa tiểu thuyết',
-            en: 'Official Posters & Novel Covers',
-          },
-          description: {
-            vi: 'Các bức tranh minh họa hoàn thiện dành cho quảng bá dự án và các trang bìa artbook.',
-            en: 'Finished high-resolution illustrations for key visuals, artbooks, and novel chapters.',
-          },
-          artworks: [
-            {
-              id: 'vis-1',
-              title: 'The End to the Beginning',
-              subtitle: 'Official Teaser Visual',
-              aspectRatio: 'portrait',
-              description: {
-                vi: 'Áp phích biểu tượng khắc họa khoảnh khắc ngôi sao cuối cùng rơi xuống vòm trời.',
-                en: 'Flagship teaser visual illustrating the moment the last star descends onto the skyline.',
-              },
-            },
-            {
-              id: 'vis-2',
-              title: 'Dấu Ấn Tinh Cầu',
-              subtitle: 'Astral Crest Awakening',
-              aspectRatio: 'square',
-              description: {
-                vi: 'Minh họa khoảnh khắc kích hoạt vòng cổ chứa mảnh thiên thạch nguyên bản.',
-                en: 'Close-up composition of the celestial meteorite amulet resonance.',
-              },
-            },
-            {
-              id: 'vis-3',
-              title: 'Cây Vĩnh Hằng Trong Bão',
-              subtitle: 'The Everbranch in Winter Gale',
-              aspectRatio: 'landscape',
-              description: {
-                vi: 'Tranh toàn cảnh cây thế giới giữa cơn bão tuyết vĩnh cửu.',
-                en: 'Wide panoramic scene depicting the world tree enduring an eternal blizzard.',
-              },
-            },
-          ],
-        },
-      ],
-      artworks: [
-        {
-          id: 'art-1',
-          title: 'Saldevie',
-          subtitle: 'Forbidden Forest',
-          imageUrl: `${import.meta.env.BASE_URL}artworks/saldevie-forbidden-forest.jpg`,
-        },
-        {
-          id: 'art-2',
-          title: 'Concept Art #02',
-          subtitle: 'Environment & Lighting Study',
-        },
-        {
-          id: 'art-3',
-          title: 'Concept Art #03',
-          subtitle: 'Character & Creature Design',
-        },
-        {
-          id: 'art-4',
-          title: 'Concept Art #04',
-          subtitle: 'Ancient Ruins & Architecture',
-        },
-        {
-          id: 'art-5',
-          title: 'Concept Art #05',
-          subtitle: 'Key Visual Illustration',
-        },
-      ],
-      development: {
-        tools: ['Photoshop', 'Clip Studio Paint', 'Blender', 'Unity / Unreal Engine', 'Git'],
-        techStack: ['C# / C++', 'Shader Graph / HLSL', '2D Skeletal & VFX Pipeline', 'Custom Dialogue & Lore System'],
-        notes: {
-          vi: 'Hệ thống phát triển kết hợp pipeline dựng cảnh 2.5D, shader ánh sáng môi trường thời gian thực và bộ công cụ quản lý nhánh cốt truyện tương tác.',
-          en: 'Development pipeline combining 2.5D environment staging, real-time atmospheric lighting shaders, and custom interactive narrative branching tools.',
-        },
-      },
-      story: {
-        synopsis: {
-          vi: 'Khi những vì sao cuối cùng trên bầu trời cổ đại dần lụi tàn, thế giới rơi vào kỷ nguyên chạng vạng vĩnh cửu. Tại khu rừng cấm Saldevie, những kẻ lữ hành mang dấu ấn Tinh Cầu bắt đầu hành trình đánh thức di sản bị lãng quên.',
-          en: 'As the final stars in the ancient sky fade into embers, the world plunges into an eternal twilight. Within the Forbidden Forest of Saldevie, travelers bearing the Astral Mark embark on a journey to awaken a forgotten legacy.',
-        },
-        chapters: [
-          {
-            title: { vi: 'Chương I — Khu Rừng Cấm Saldevie', en: 'Chapter I — The Forbidden Forest of Saldevie' },
-            content: {
-              vi: 'Nơi ranh giới giữa thực tại và ký ức cổ xưa đan xen dưới tán cây già cỗi, được canh giữ bởi những sinh linh thần thoại.',
-              en: 'Where the boundary between reality and ancient memory intertwines beneath primordial canopies guarded by mythical beings.',
-            },
-          },
-          {
-            title: { vi: 'Chương II — Dư Âm Những Vì Sao', en: 'Chapter II — Echoes of the Final Stars' },
-            content: {
-              vi: 'Khám phá nguồn gốc của mảnh vỡ thiên tinh và lời nguyền phong ấn các vương quốc cổ đại.',
-              en: 'Uncovering the origin of the celestial shards and the curse sealing the ancient kingdoms.',
-            },
-          },
-        ],
-      },
-    },
-    {
-      id: 'project-2',
-      title: 'Coming Soon',
-      isComingSoon: true,
-    },
-    {
-      id: 'project-3',
-      title: 'Coming Soon',
-      isComingSoon: true,
-    },
-    {
-      id: 'project-4',
-      title: 'Coming Soon',
-      isComingSoon: true,
-    },
-    {
-      id: 'project-5',
-      title: 'Coming Soon',
-      isComingSoon: true,
-    },
-  ];
+  const projects: ProjectItem[] = PROJECTS_DATA;
 
   const isOpenDropdown = activeProjectId !== null;
   const activeProject = projects.find((p) => p.id === (activeProjectId || renderedProjectId));
@@ -538,25 +149,46 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
     setActiveProjectId(targetProject.id);
     setActiveTab('album');
 
-    // Xác định album và ảnh tương ứng với artworkIndex được truyền vào
-    const artIdx = externalSelection.artworkIndex;
+    // Xác định album và ảnh tương ứng
     if (targetProject.albums && targetProject.albums.length > 0) {
       let foundAlbumIdx = 0;
       let foundArtIdx = 0;
-      let cumulative = 0;
-      for (let i = 0; i < targetProject.albums.length; i++) {
-        const count = targetProject.albums[i].artworks.length;
-        if (artIdx < cumulative + count) {
-          foundAlbumIdx = i;
-          foundArtIdx = artIdx - cumulative;
-          break;
+      let matched = false;
+
+      // Ưu tiên 1: Tìm chính xác theo artworkId nếu có
+      if (externalSelection.artworkId) {
+        for (let i = 0; i < targetProject.albums.length; i++) {
+          const alb = targetProject.albums[i];
+          if (externalSelection.albumId && alb.id !== externalSelection.albumId) continue;
+          const artIdxInAlb = alb.artworks.findIndex((a) => a.id === externalSelection.artworkId);
+          if (artIdxInAlb !== -1) {
+            foundAlbumIdx = i;
+            foundArtIdx = artIdxInAlb;
+            matched = true;
+            break;
+          }
         }
-        cumulative += count;
       }
+
+      // Ưu tiên 2: Tính theo cumulative index
+      if (!matched) {
+        const artIdx = externalSelection.artworkIndex;
+        let cumulative = 0;
+        for (let i = 0; i < targetProject.albums.length; i++) {
+          const count = targetProject.albums[i].artworks.length;
+          if (artIdx < cumulative + count) {
+            foundAlbumIdx = i;
+            foundArtIdx = artIdx - cumulative;
+            break;
+          }
+          cumulative += count;
+        }
+      }
+
       setSelectedAlbumIndex(foundAlbumIdx);
       setSelectedArtIndex(foundArtIdx);
     } else {
-      setSelectedArtIndex(artIdx);
+      setSelectedArtIndex(externalSelection.artworkIndex);
     }
 
     requestAnimationFrame(() => {
@@ -591,7 +223,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
     },
     {
       id: 'development',
-      label: { vi: 'Development', en: 'Development' },
+      label: { vi: 'Quá trình phát triển', en: 'Development' },
     },
     {
       id: 'story',
@@ -609,8 +241,8 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
         
         {/* Tiêu đề phần PROJECTS */}
         <div className="flex items-center justify-between border-b border-white/10 pb-3 sm:pb-4 mb-4 sm:mb-6 flex-shrink-0">
-          <h2 className="font-accent text-2xl sm:text-3xl font-black tracking-widest text-white uppercase">
-            PROJECTS
+          <h2 className={`${lang === 'vi' ? 'font-accent-vi' : 'font-accent'} text-2xl sm:text-3xl font-black tracking-widest text-white uppercase`}>
+            {lang === 'vi' ? 'DỰ ÁN' : 'PROJECTS'}
           </h2>
         </div>
 
@@ -659,13 +291,15 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                               : 'text-2xl font-bold text-white group-hover:text-zinc-100'
                           }`}
                         >
-                          {project.title}
+                          {project.isComingSoon
+                            ? (lang === 'vi' ? 'Sắp ra mắt' : 'Coming Soon')
+                            : getLocalized(project.title, lang)}
                         </h3>
                       </div>
                       {project.tag && (
                         <div>
                           <span className="inline-block px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest text-zinc-200 bg-white/10 border border-white/30">
-                            {project.tag}
+                            {lang === 'vi' && project.tag.toLowerCase() === 'game' ? 'TRÒ CHƠI' : project.tag.toUpperCase()}
                           </span>
                         </div>
                       )}
@@ -876,7 +510,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                                   {art.imageUrl ? (
                                     <img
                                       src={art.imageUrl}
-                                      alt={art.title}
+                                      alt={getLocalized(art.title, lang)}
                                       draggable={false}
                                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 pointer-events-none select-none"
                                       loading="lazy"
@@ -907,10 +541,10 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                                       {/* Giữa thẻ: Tên tác phẩm & Mô tả ngắn */}
                                       <div className="space-y-1.5 relative z-10 my-auto py-2 pointer-events-none">
                                         <h4 className="font-display text-sm sm:text-base font-semibold text-white tracking-wide group-hover:text-zinc-100 transition-colors">
-                                          {art.title}
+                                          {getLocalized(art.title, lang)}
                                         </h4>
                                         <p className="font-sans text-xs text-zinc-400 line-clamp-2 font-light">
-                                          {art.subtitle}
+                                          {getLocalized(art.subtitle, lang)}
                                         </p>
                                       </div>
 
@@ -934,10 +568,10 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                                             {ratioBadge}
                                           </span>
                                           <h4 className="font-display text-sm sm:text-base font-bold text-white truncate">
-                                            {art.title}
+                                            {getLocalized(art.title, lang)}
                                           </h4>
                                           <p className="font-sans text-xs text-zinc-300 font-light truncate">
-                                            {art.subtitle}
+                                            {getLocalized(art.subtitle, lang)}
                                           </p>
                                         </div>
                                         <div className="w-8 h-8 rounded-none bg-black/70 border border-white/30 flex items-center justify-center text-white flex-shrink-0">
@@ -963,7 +597,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                           <button
                             onClick={() => setIsLightboxOpen(false)}
                             className="absolute top-5 right-5 sm:top-7 sm:right-7 w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition-colors z-20 cursor-pointer"
-                            aria-label="Close lightbox"
+                            aria-label={lang === 'vi' ? 'Đóng chế độ xem ảnh' : 'Close lightbox'}
                           >
                             <X className="w-5 h-5" />
                           </button>
@@ -972,7 +606,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                           <button
                             onClick={prevArt}
                             className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/75 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-all z-20 cursor-pointer"
-                            aria-label="Previous photo"
+                            aria-label={lang === 'vi' ? 'Ảnh trước' : 'Previous photo'}
                           >
                             <ChevronLeft className="w-6 h-6" />
                           </button>
@@ -981,7 +615,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                           <button
                             onClick={nextArt}
                             className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/75 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-all z-20 cursor-pointer"
-                            aria-label="Next photo"
+                            aria-label={lang === 'vi' ? 'Ảnh tiếp theo' : 'Next photo'}
                           >
                             <ChevronRight className="w-6 h-6" />
                           </button>
@@ -995,7 +629,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                               {currentArt.imageUrl ? (
                                 <img
                                   src={currentArt.imageUrl}
-                                  alt={currentArt.title}
+                                  alt={getLocalized(currentArt.title, lang)}
                                   className="w-auto h-auto max-w-full max-h-[75vh] object-contain shadow-2xl"
                                 />
                               ) : (
@@ -1005,13 +639,17 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                                   </div>
                                   <div className="space-y-1 max-w-md">
                                     <span className="font-mono text-xs uppercase tracking-widest text-zinc-400">
-                                      {currentArt.aspectRatio === 'portrait' ? '3:4 Portrait' : currentArt.aspectRatio === 'square' ? '1:1 Square' : '16:9 Landscape'}
+                                      {currentArt.aspectRatio === 'portrait'
+                                        ? (lang === 'vi' ? 'Dọc (3:4)' : '3:4 Portrait')
+                                        : currentArt.aspectRatio === 'square'
+                                        ? (lang === 'vi' ? 'Vuông (1:1)' : '1:1 Square')
+                                        : (lang === 'vi' ? 'Ngang (16:9)' : '16:9 Landscape')}
                                     </span>
                                     <h3 className="font-display text-2xl font-bold text-white">
-                                      {currentArt.title}
+                                      {getLocalized(currentArt.title, lang)}
                                     </h3>
                                     <p className="text-sm text-zinc-300 font-light">
-                                      {currentArt.subtitle}
+                                      {getLocalized(currentArt.subtitle, lang)}
                                     </p>
                                   </div>
                                 </div>
@@ -1030,10 +668,10 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                                   </span>
                                 </div>
                                 <h4 className="font-display text-lg sm:text-xl font-bold">
-                                  {currentArt.title}
+                                  {getLocalized(currentArt.title, lang)}
                                 </h4>
                                 <p className="text-xs sm:text-sm text-zinc-400 font-light">
-                                  {currentArt.description?.[lang] || currentArt.subtitle}
+                                  {currentArt.description?.[lang] || getLocalized(currentArt.subtitle, lang)}
                                 </p>
                               </div>
 
@@ -1050,22 +688,111 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                   );
                 })()}
 
-                {/* 3. DEVELOPMENT (TOOLS) */}
+                {/* 3. DEVELOPMENT (TOOLS & GITHUB REPO & NOTES) */}
                 {activeTab === 'development' && activeProject.development && (
-                  <div className="space-y-3">
-                    <h4 className="font-mono text-xs uppercase tracking-widest text-white">
-                      {lang === 'vi' ? 'Công cụ (Tools)' : 'Tools & Software'}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {activeProject.development.tools.map((tool) => (
-                        <span
-                          key={tool}
-                          className="px-3 py-1.5 text-xs font-mono text-zinc-200 bg-white/[0.04] border border-white/15"
-                        >
-                          {tool}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="space-y-6 max-w-4xl">
+                    {/* Tool & GitHub Repository Section */}
+                    {activeProject.development.toolProject && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                          <h4 className="font-mono text-xs uppercase tracking-widest text-white">
+                            {lang === 'vi' ? 'Công cụ phát triển' : 'Development Tool'}
+                          </h4>
+                        </div>
+
+                        {/* GitHub Repository Card */}
+                        <div className="p-5 sm:p-6 bg-[#090912] border border-white/10 hover:border-white/30 transition-all duration-300">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="space-y-2 min-w-0 flex-1">
+                              <div className="flex items-center gap-2.5">
+                                <svg className="w-5 h-5 text-white flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                                </svg>
+                                <span className="font-mono text-sm font-semibold text-white tracking-wide truncate">
+                                  {activeProject.development.toolProject.repo}
+                                </span>
+                              </div>
+                              <p className="text-xs sm:text-sm text-zinc-300 font-light leading-relaxed">
+                                {activeProject.development.toolProject.description[lang]}
+                              </p>
+                              {activeProject.development.toolProject.tags && (
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                  {activeProject.development.toolProject.tags.map((tag) => (
+                                    <span
+                                      key={tag}
+                                      className="px-2.5 py-0.5 text-[10px] font-mono text-zinc-400 bg-white/[0.03] border border-white/10"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <a
+                              href={activeProject.development.toolProject.githubUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-black font-mono text-xs uppercase tracking-wider font-semibold hover:bg-zinc-200 transition-colors flex-shrink-0"
+                            >
+                              <span>{lang === 'vi' ? 'Xem trên GitHub' : 'View on GitHub'}</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Optional Legacy Tools if present */}
+                    {activeProject.development.tools && activeProject.development.tools.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-mono text-xs uppercase tracking-widest text-white">
+                          {lang === 'vi' ? 'Công cụ đồ họa & Phần mềm' : 'Tools & Software'}
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {activeProject.development.tools.map((tool) => (
+                            <span
+                              key={tool}
+                              className="px-3 py-1.5 text-xs font-mono text-zinc-200 bg-white/[0.04] border border-white/15"
+                            >
+                              {tool}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Optional Legacy TechStack if present */}
+                    {activeProject.development.techStack && activeProject.development.techStack.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-mono text-xs uppercase tracking-widest text-white">
+                          {lang === 'vi' ? 'Công nghệ & Kỹ thuật lập trình' : 'Tech Stack & Systems'}
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {activeProject.development.techStack.map((tech) => (
+                            <span
+                              key={tech}
+                              className="px-3 py-1.5 text-xs font-mono text-zinc-300 bg-white/[0.03] border border-white/10"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Development Notes */}
+                    {activeProject.development.notes && (
+                      <div className="space-y-2 pt-2 border-t border-white/10">
+                        <h4 className="font-mono text-xs uppercase tracking-widest text-white">
+                          {lang === 'vi' ? 'Ghi chú phát triển' : 'Development Notes'}
+                        </h4>
+                        <p className="text-sm text-zinc-300 font-light leading-relaxed">
+                          {activeProject.development.notes[lang]}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 

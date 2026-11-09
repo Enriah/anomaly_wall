@@ -10,6 +10,17 @@ interface HexPolygon {
   points: string;
 }
 
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  life: number;
+  maxLife: number;
+  color: string;
+}
+
 const LAYER2_POLYGONS: HexPolygon[] = [
   { cls: 'cls-2', points: '363.15 249.87 338.15 249.87 325.65 272.08 338.15 294.29 363.15 294.29 375.65 272.08 363.15 249.87' },
   { cls: 'cls-1', points: '428.98 207.79 419.54 224.14 429.28 241.01 448.76 241.01 458.5 224.14 449.06 207.79 428.98 207.79' },
@@ -121,6 +132,7 @@ export const LogoIntro: React.FC<LogoIntroProps> = ({ onComplete }) => {
     scale: 1,
   });
   const lastTapRef = useRef<number>(0);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Compute centroid distance from center (431.87, 431.87) for each hexagon to stagger ripple wave
   const computedPolygons = useMemo(() => {
@@ -188,12 +200,12 @@ export const LogoIntro: React.FC<LogoIntroProps> = ({ onComplete }) => {
 
     const dockTimer = setTimeout(() => {
       triggerDocking();
-    }, 2700);
+    }, 4100);
 
     const completeTimer = setTimeout(() => {
       document.body.style.overflow = prevOverflow;
       onComplete();
-    }, 3600);
+    }, 4950);
 
     return () => {
       clearTimeout(dockTimer);
@@ -201,6 +213,200 @@ export const LogoIntro: React.FC<LogoIntroProps> = ({ onComplete }) => {
       document.body.style.overflow = prevOverflow;
     };
   }, [onComplete]);
+
+  // Visual Engine for the Bright White Black Hole Accretion Beam
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    const startTime = performance.now();
+    const BEAM_START_DELAY = 1250; // starts at 1.25s after hex cells and core circle appear
+    const BEAM_DURATION = 1180; // 1.18s silky smooth traversal from top-right to bottom-left
+    const particles: Particle[] = [];
+
+    // Control points in SVG space matching the user's red arrow trajectory
+    const P0 = { x: 655.5, y: 207.8 }; // Top-right tip
+    const P1 = { x: 520.0, y: 480.0 }; // Curves down-left through hex
+    const P2 = { x: 350.0, y: 620.0 }; // Swings right under the center circle
+    const P3 = { x: 207.5, y: 656.5 }; // Bottom-left tip
+
+    const getBezier = (t: number) => {
+      const u = Math.max(0, Math.min(1, t));
+      const o = 1 - u;
+      return {
+        x: o * o * o * P0.x + 3 * o * o * u * P1.x + 3 * o * u * u * P2.x + u * u * u * P3.x,
+        y: o * o * o * P0.y + 3 * o * o * u * P1.y + 3 * o * u * u * P2.y + u * u * u * P3.y,
+      };
+    };
+
+    const getTangent = (t: number) => {
+      const u = Math.max(0, Math.min(1, t));
+      const o = 1 - u;
+      const dx = 3 * o * o * (P1.x - P0.x) + 6 * o * u * (P2.x - P1.x) + 3 * u * u * (P3.x - P2.x);
+      const dy = 3 * o * o * (P1.y - P0.y) + 6 * o * u * (P2.y - P1.y) + 3 * u * u * (P3.y - P2.y);
+      const len = Math.hypot(dx, dy) || 1;
+      return { dx: dx / len, dy: dy / len, nx: -dy / len, ny: dx / len };
+    };
+
+    const render = (now: number) => {
+      const elapsed = now - startTime;
+
+      // Handle high-DPI
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = rect.width;
+      const height = rect.height;
+
+      if (width > 0 && height > 0) {
+        if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+          canvas.width = Math.round(width * dpr);
+          canvas.height = Math.round(height * dpr);
+        }
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, width, height);
+
+      const toScreen = (pt: { x: number; y: number }) => ({
+        x: ((pt.x - 205.8) / 452.2) * width,
+        y: ((pt.y - 205.8) / 452.2) * height,
+      });
+
+      if (elapsed >= BEAM_START_DELAY && elapsed <= BEAM_START_DELAY + BEAM_DURATION + 500) {
+        const rawProgress = Math.min(1, Math.max(0, (elapsed - BEAM_START_DELAY) / BEAM_DURATION));
+        // Sinusoidal ease-in-out for an ultra-smooth, fluid cosmic light movement
+        const progress = 0.5 - 0.5 * Math.cos(rawProgress * Math.PI);
+
+        const headPt = toScreen(getBezier(progress));
+        const headTangent = getTangent(progress);
+
+        // 1. Spawn trailing pure white cosmic stardust particles
+        if (rawProgress > 0 && rawProgress < 0.98) {
+          const spawnCount = Math.floor(Math.random() * 2) + 2;
+          for (let i = 0; i < spawnCount; i++) {
+            const spread = (Math.random() - 0.5) * 6;
+            const backSpeed = -(Math.random() * 1.4 + 0.3);
+            particles.push({
+              x: headPt.x + headTangent.nx * spread,
+              y: headPt.y + headTangent.ny * spread,
+              vx: headTangent.dx * backSpeed + (Math.random() - 0.5) * 0.6,
+              vy: headTangent.dy * backSpeed + (Math.random() - 0.5) * 0.6,
+              size: Math.random() * 1.7 + 0.7,
+              life: 1,
+              maxLife: Math.random() * 24 + 18,
+              color: '#ffffff',
+            });
+          }
+        }
+
+        ctx.globalCompositeOperation = 'lighter';
+
+        // 2. Draw curved streaming plasma tail along the black hole accretion curve
+        const tailProgress = Math.max(0, progress - 0.42);
+        const steps = 60;
+        const curvePoints: { x: number; y: number }[] = [];
+        for (let i = 0; i <= steps; i++) {
+          const t = tailProgress + (progress - tailProgress) * (i / steps);
+          curvePoints.push(toScreen(getBezier(t)));
+        }
+
+        if (curvePoints.length > 1 && progress > 0.005) {
+          // Pass A: Outer ethereal pure white diffuse aura
+          ctx.beginPath();
+          ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+          for (let i = 1; i < curvePoints.length; i++) {
+            ctx.lineTo(curvePoints[i].x, curvePoints[i].y);
+          }
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+          ctx.lineWidth = 16 * (width / 300);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+
+          // Pass B: Bright white beam glow
+          ctx.beginPath();
+          ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+          for (let i = 1; i < curvePoints.length; i++) {
+            ctx.lineTo(curvePoints[i].x, curvePoints[i].y);
+          }
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.78)';
+          ctx.lineWidth = 6 * (width / 300);
+          ctx.stroke();
+
+          // Pass C: Intense brilliant white laser core
+          ctx.beginPath();
+          ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+          for (let i = 1; i < curvePoints.length; i++) {
+            ctx.lineTo(curvePoints[i].x, curvePoints[i].y);
+          }
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.2 * (width / 300);
+          ctx.stroke();
+        }
+
+        // 3. Radiant Pure White Photon Flare Head with star glint
+        if (progress > 0.01 && progress < 0.99) {
+          const flareRadius = 18 * (width / 300);
+          const radGrad = ctx.createRadialGradient(
+            headPt.x, headPt.y, 0,
+            headPt.x, headPt.y, flareRadius
+          );
+          radGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+          radGrad.addColorStop(0.25, 'rgba(255, 255, 255, 0.95)');
+          radGrad.addColorStop(0.55, 'rgba(255, 255, 255, 0.45)');
+          radGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+          ctx.fillStyle = radGrad;
+          ctx.beginPath();
+          ctx.arc(headPt.x, headPt.y, flareRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 4-point subtle star glint on the photon head
+          const glintLen = 15 * (width / 300);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(headPt.x - headTangent.dx * glintLen, headPt.y - headTangent.dy * glintLen);
+          ctx.lineTo(headPt.x + headTangent.dx * glintLen, headPt.y + headTangent.dy * glintLen);
+          ctx.moveTo(headPt.x - headTangent.nx * (glintLen * 0.65), headPt.y - headTangent.ny * (glintLen * 0.65));
+          ctx.lineTo(headPt.x + headTangent.nx * (glintLen * 0.65), headPt.y + headTangent.ny * (glintLen * 0.65));
+          ctx.stroke();
+        }
+
+        // 4. Update and render pure white stardust sparkle particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 1 / p.maxLife;
+
+          if (p.life <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+
+          const pAlpha = p.life * 0.92;
+          ctx.fillStyle = `rgba(255, 255, 255, ${pAlpha})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+
+      if (elapsed < BEAM_START_DELAY + BEAM_DURATION + 700) {
+        animId = requestAnimationFrame(render);
+      }
+    };
+
+    animId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animId);
+  }, []);
 
   const handleScreenTap = () => {
     const now = performance.now();
@@ -225,19 +431,17 @@ export const LogoIntro: React.FC<LogoIntroProps> = ({ onComplete }) => {
         }`}
       />
 
-      {/* Water ripples radiating outward synced with the two 'A' legs sliding in */}
+      {/* Water ripples radiating outward synced with each 'A' leg sliding in */}
       <div
         className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500 ${
           phase === 'docking' ? 'opacity-0' : 'opacity-100'
         }`}
       >
         <div className="relative w-[220px] h-[220px] sm:w-[300px] sm:h-[300px] flex items-center justify-center">
-          {/* Beat 1: Triggered when the left leg of 'A' locks into place */}
+          {/* Sóng đơn kích hoạt khi thanh chữ A bên trái trượt vào */}
           <span className="anw-water-ripple anw-water-ripple-1" />
-          <span className="anw-water-ripple anw-water-ripple-1-echo" />
-          {/* Beat 2: Triggered when the right leg of 'A' locks into place */}
+          {/* Sóng đơn kích hoạt khi thanh chữ A bên phải trượt vào */}
           <span className="anw-water-ripple anw-water-ripple-2" />
-          <span className="anw-water-ripple anw-water-ripple-2-echo" />
         </div>
       </div>
 
@@ -351,43 +555,75 @@ export const LogoIntro: React.FC<LogoIntroProps> = ({ onComplete }) => {
               .anim-core-ring {
                 transform-origin: 431.87px 431.87px;
                 opacity: 0;
-                animation: anw-core-ring 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 1.05s forwards;
+                animation: anw-core-ring 0.60s cubic-bezier(0.34, 1.56, 0.64, 1) 0.75s forwards;
               }
 
               .anim-slash-left {
                 opacity: 0;
-                animation: anw-slash-left 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.45s forwards;
+                animation: anw-slash-left 0.55s cubic-bezier(0.16, 1, 0.3, 1) 2.50s forwards;
               }
 
               .anim-slash-right {
                 opacity: 0;
-                animation: anw-slash-right 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.62s forwards;
+                animation: anw-slash-right 0.55s cubic-bezier(0.16, 1, 0.3, 1) 3.10s forwards;
+              }
+
+              /* Dải sáng cong hố đen trắng sáng (Bright White Photon Arc Animation) */
+              @keyframes anw-photon-sweep {
+                0% {
+                  stroke-dashoffset: 420;
+                  opacity: 0;
+                }
+                15% {
+                  opacity: 1;
+                }
+                78% {
+                  opacity: 0.95;
+                }
+                92% {
+                  stroke-dashoffset: -580;
+                  opacity: 0.6;
+                }
+                100% {
+                  stroke-dashoffset: -820;
+                  opacity: 0;
+                }
+              }
+
+              .anw-photon-halo {
+                fill: none;
+                stroke: url(#anw-photon-grad);
+                stroke-width: 14px;
+                stroke-linecap: round;
+                stroke-dasharray: 260 1000;
+                stroke-dashoffset: 420;
+                opacity: 0;
+                filter: url(#anw-blackhole-glow);
+                animation: anw-photon-sweep 1.18s cubic-bezier(0.37, 0, 0.63, 1) 1.25s forwards;
+              }
+
+              .anw-photon-core {
+                fill: none;
+                stroke: #ffffff;
+                stroke-width: 2.5px;
+                stroke-linecap: round;
+                stroke-dasharray: 200 1000;
+                stroke-dashoffset: 420;
+                opacity: 0;
+                filter: drop-shadow(0 0 8px rgba(255, 255, 255, 1));
+                animation: anw-photon-sweep 1.18s cubic-bezier(0.37, 0, 0.63, 1) 1.25s forwards;
               }
 
               @keyframes anw-water-wave {
                 0% {
-                  transform: scale(0.88);
-                  opacity: 0;
-                }
-                18% {
-                  opacity: 0.55;
-                }
-                100% {
-                  transform: scale(2.15);
-                  opacity: 0;
-                }
-              }
-
-              @keyframes anw-water-wave-soft {
-                0% {
-                  transform: scale(0.92);
+                  transform: scale(0.85);
                   opacity: 0;
                 }
                 20% {
-                  opacity: 0.32;
+                  opacity: 0.65;
                 }
                 100% {
-                  transform: scale(2.45);
+                  transform: scale(2.2);
                   opacity: 0;
                 }
               }
@@ -398,35 +634,36 @@ export const LogoIntro: React.FC<LogoIntroProps> = ({ onComplete }) => {
                 border-radius: 9999px;
                 opacity: 0;
                 pointer-events: none;
-                border: 1.5px solid rgba(225, 230, 240, 0.45);
-                background: radial-gradient(
-                  circle,
-                  transparent 54%,
-                  rgba(210, 215, 225, 0.08) 66%,
-                  rgba(255, 255, 255, 0.18) 70%,
-                  transparent 74%
-                );
-                box-shadow: 0 0 24px rgba(255, 255, 255, 0.12), inset 0 0 18px rgba(255, 255, 255, 0.08);
+                border: 1.5px solid rgba(255, 255, 255, 0.45);
+                box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
               }
 
-              /* Synced with left leg impact (~1.72s) */
+              /* Sóng đơn 1: Kích hoạt khi thanh chữ A bên trái trượt vào (~2.80s) */
               .anw-water-ripple-1 {
-                animation: anw-water-wave 1.15s cubic-bezier(0.16, 1, 0.3, 1) 1.72s forwards;
-              }
-              .anw-water-ripple-1-echo {
-                border-width: 1px;
-                animation: anw-water-wave-soft 1.25s cubic-bezier(0.16, 1, 0.3, 1) 1.84s forwards;
+                animation: anw-water-wave 0.95s cubic-bezier(0.16, 1, 0.3, 1) 2.80s forwards;
               }
 
-              /* Synced with right leg impact (~1.92s) */
+              /* Sóng đơn 2: Kích hoạt khi thanh chữ A bên phải trượt vào (~3.40s) */
               .anw-water-ripple-2 {
-                animation: anw-water-wave 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.92s forwards;
-              }
-              .anw-water-ripple-2-echo {
-                border-width: 1px;
-                animation: anw-water-wave-soft 1.3s cubic-bezier(0.16, 1, 0.3, 1) 2.04s forwards;
+                animation: anw-water-wave 0.95s cubic-bezier(0.16, 1, 0.3, 1) 3.40s forwards;
               }
             `}</style>
+
+            <linearGradient id="anw-photon-grad" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
+              <stop offset="30%" stopColor="rgba(255, 255, 255, 0.75)" />
+              <stop offset="60%" stopColor="rgba(255, 255, 255, 1)" />
+              <stop offset="85%" stopColor="rgba(255, 255, 255, 0.65)" />
+              <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
+            </linearGradient>
+
+            <filter id="anw-blackhole-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
           <g>
@@ -454,13 +691,29 @@ export const LogoIntro: React.FC<LogoIntroProps> = ({ onComplete }) => {
               ))}
             </g>
 
-            {/* Layer 3: Inner Grey Core Circle */}
+            {/* Layer 3: Inner Grey Core Circle (Xuất hiện trước để dải sáng lướt đè lên trên) */}
             <g id="Intro_Layer_3">
               <circle
                 className="anw-cls-3 anim-core-ring"
                 cx="431.87"
                 cy="431.87"
                 r="124.5"
+              />
+            </g>
+
+            {/* Layer 3.5: Dải sáng cong trắng sáng hiển thị trên cả hình tròn xám */}
+            <g id="Intro_Layer_PhotonArc">
+              {/* Vầng sáng trắng khuếch tán bên ngoài (Accretion halo) */}
+              <path
+                className="anw-photon-halo"
+                d="M 655.5 207.8 C 520 480, 350 620, 207.5 656.5"
+                pathLength="1000"
+              />
+              {/* Lõi tia sáng photon trắng sắc nét (Photon core streak) */}
+              <path
+                className="anw-photon-core"
+                d="M 655.5 207.8 C 520 480, 350 620, 207.5 656.5"
+                pathLength="1000"
               />
             </g>
 
@@ -477,6 +730,12 @@ export const LogoIntro: React.FC<LogoIntroProps> = ({ onComplete }) => {
             </g>
           </g>
         </svg>
+
+        {/* Visual Engine Canvas Overlay for the Pale Golden-White Beam & Cosmic Particles */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none z-20"
+        />
       </div>
     </div>
   );

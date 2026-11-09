@@ -191,7 +191,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => smoothScrollToTop(750)}
               className="px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
             >
-              Home
+              {lang === 'vi' ? 'Trang chủ' : 'Home'}
             </button>
 
             {/* Nút cuộn xuống phần Project */}
@@ -202,7 +202,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               className="px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
             >
-              Project
+              {lang === 'vi' ? 'Dự án' : 'Project'}
             </button>
 
             {/* Language Switcher */}

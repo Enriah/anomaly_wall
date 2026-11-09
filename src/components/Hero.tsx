@@ -1,15 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
-
-interface ArtworkSlide {
-  id: string;
-  title: string;
-  subtitle: string;
-  project?: string;
-  projectId?: string;
-  artworkIndex?: number;
-  imageUrl?: string;
-}
+import { getRandomHeroArtworks, ArtworkSlide } from '../data/projectsData';
 
 interface RippleItem {
   id: number;
@@ -20,26 +11,18 @@ interface RippleItem {
 
 interface HeroProps {
   lang: 'vi' | 'en';
-  onSelectArtwork?: (projectId: string, artworkIndex: number) => void;
+  onSelectArtwork?: (
+    projectId: string,
+    artworkIndex: number,
+    albumId?: string,
+    artworkId?: string
+  ) => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
-  // Danh sách các slide Artwork 2D ngang 16:9
-  const [artworks] = useState<ArtworkSlide[]>([
-    {
-      id: '1',
-      title: 'Saldevie',
-      subtitle: 'Forbidden Forest',
-      project: 'FinalStars',
-      projectId: 'finalstars',
-      artworkIndex: 0,
-      imageUrl: `${import.meta.env.BASE_URL}artworks/saldevie-forbidden-forest.jpg`,
-    },
-    { id: '2', title: 'Artwork 02', subtitle: 'Environment Matte Painting', projectId: 'finalstars', artworkIndex: 1, imageUrl: '' },
-    { id: '3', title: 'Artwork 03', subtitle: 'Editorial & Brand Direction', projectId: 'finalstars', artworkIndex: 2, imageUrl: '' },
-    { id: '4', title: 'Artwork 04', subtitle: 'Character & World Concept', projectId: 'finalstars', artworkIndex: 3, imageUrl: '' },
-    { id: '5', title: 'Artwork 05', subtitle: 'Promotional Keyframe', projectId: 'finalstars', artworkIndex: 4, imageUrl: '' },
-  ]);
+  // Danh sách 5 slide Artwork 2D ngang (16:9) được chọn ngẫu nhiên từ các Album
+  // Mỗi lần vào hoặc tải lại trang sẽ tự động tạo một tổ hợp 5 ảnh mới
+  const [artworks] = useState<ArtworkSlide[]>(() => getRandomHeroArtworks(5));
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
@@ -338,7 +321,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                     } else if (isNext) {
                       nextSlide();
                     } else if (isActive && art.projectId && onSelectArtwork) {
-                      onSelectArtwork(art.projectId, art.artworkIndex ?? 0);
+                      onSelectArtwork(art.projectId, art.artworkIndex ?? 0, art.albumId, art.artworkId);
                     }
                   }}
                   style={{
@@ -359,7 +342,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                   {art.imageUrl ? (
                     <img
                       src={art.imageUrl}
-                      alt={`${art.title} ${art.subtitle}`}
+                      alt={`${typeof art.title === 'object' ? art.title[lang] : art.title} ${typeof art.subtitle === 'object' ? art.subtitle[lang] : art.subtitle}`}
                       className="w-full h-full object-cover select-none pointer-events-none"
                       draggable={false}
                     />
@@ -409,10 +392,10 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                     {/* Nhãn thông tin góc dưới bên trái không có khung viền */}
                     <div className="absolute bottom-5 left-6 sm:bottom-7 sm:left-8 pointer-events-none">
                       <h2 className="font-display text-xl sm:text-3xl font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-                        {art.title}
+                        {typeof art.title === 'object' ? art.title[lang] : art.title}
                       </h2>
                       <p className="font-sans text-xs sm:text-sm text-zinc-300 font-light tracking-wide mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                        {art.subtitle}
+                        {typeof art.subtitle === 'object' ? art.subtitle[lang] : art.subtitle}
                       </p>
                     </div>
 
@@ -434,7 +417,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                   ? 'w-10 bg-zinc-900 shadow-[0_2px_8px_rgba(0,0,0,0.25)]'
                   : 'w-2.5 bg-zinc-900/20 hover:bg-zinc-900/45'
               }`}
-              aria-label={`Go to slide ${idx + 1}`}
+              aria-label={lang === 'vi' ? `Chuyển tới slide ${idx + 1}` : `Go to slide ${idx + 1}`}
             />
           ))}
         </div>

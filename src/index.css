@@ -31,7 +31,13 @@
     font-family: 'Playfair Display', Georgia, serif;
   }
   .font-accent {
-    font-family: 'Syne', 'Cinzel', sans-serif;
+    font-family: 'Syne', 'Chakra Petch', 'Montserrat', 'Plus Jakarta Sans', sans-serif;
+  }
+  .font-accent-vi {
+    font-family: 'Chakra Petch', 'Montserrat', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  html[lang="vi"] .font-accent {
+    font-family: 'Chakra Petch', 'Montserrat', 'Plus Jakarta Sans', system-ui, sans-serif;
   }
   .font-tech {
     font-family: 'JetBrains Mono', monospace;

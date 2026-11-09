@@ -101,7 +101,9 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div>
-            2026 AnomalyWall Team. All rights reserved.
+            {lang === 'vi'
+              ? '© 2026 AnomalyWall Team. Mọi quyền được bảo lưu.'
+              : '© 2026 AnomalyWall Team. All rights reserved.'}
           </div>
         </div>
 

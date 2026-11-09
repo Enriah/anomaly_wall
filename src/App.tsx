@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Projects } from './components/Projects';
@@ -19,6 +19,8 @@ export const App: React.FC = () => {
   const [selectedSlideArtwork, setSelectedSlideArtwork] = useState<{
     projectId: string;
     artworkIndex: number;
+    albumId?: string;
+    artworkId?: string;
     timestamp: number;
   } | null>(null);
 
@@ -39,10 +41,21 @@ export const App: React.FC = () => {
     setLang(prev => (prev === 'vi' ? 'en' : 'vi'));
   };
 
-  const handleSelectArtworkFromSlider = (projectId: string, artworkIndex: number) => {
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  const handleSelectArtworkFromSlider = (
+    projectId: string,
+    artworkIndex: number,
+    albumId?: string,
+    artworkId?: string
+  ) => {
     setSelectedSlideArtwork({
       projectId,
       artworkIndex,
+      albumId,
+      artworkId,
       timestamp: Date.now(),
     });
   };
