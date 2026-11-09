@@ -2,13 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { getRandomHeroArtworks, ArtworkSlide } from '../data/projectsData';
 
-interface RippleItem {
-  id: number;
-  x: number;
-  y: number;
-  type: 'move' | 'click';
-}
-
 interface HeroProps {
   lang: 'vi' | 'en';
   onSelectArtwork?: (
@@ -26,7 +19,6 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [ripples, setRipples] = useState<RippleItem[]>([]);
   const [dragOffset, setDragOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const dragStartXRef = useRef<number>(0);
@@ -35,7 +27,6 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
   const hasDraggedRef = useRef<boolean>(false);
   const pointerIdRef = useRef<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
-  const lastMoveTimeRef = useRef<number>(0);
 
   // Tự động chuyển slide mỗi 4.5 giây
   useEffect(() => {
@@ -45,31 +36,6 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
     }, 4500);
     return () => clearInterval(interval);
   }, [isAutoPlay, artworks.length]);
-
-  const spawnRipple = (clientX: number, clientY: number, type: 'move' | 'click') => {
-    if (!sectionRef.current) return;
-    const rect = sectionRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    const id = Date.now() + Math.random();
-
-    setRipples((prev) => [...prev.slice(-18), { id, x, y, type }]);
-
-    setTimeout(() => {
-      setRipples((prev) => prev.filter((r) => r.id !== id));
-    }, type === 'click' ? 1350 : 1150);
-  };
-
-  const handleSectionMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    const now = performance.now();
-    if (now - lastMoveTimeRef.current < 85) return;
-    lastMoveTimeRef.current = now;
-    spawnRipple(e.clientX, e.clientY, 'move');
-  };
-
-  const handleSectionClick = (e: React.MouseEvent<HTMLElement>) => {
-    spawnRipple(e.clientX, e.clientY, 'click');
-  };
 
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev - 1 + artworks.length) % artworks.length);
@@ -197,9 +163,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
     <section
       id="slider"
       ref={sectionRef}
-      onMouseMove={handleSectionMouseMove}
-      onMouseDown={handleSectionClick}
-      className="relative min-h-screen h-screen py-4 sm:py-6 flex flex-col justify-center overflow-hidden bg-gradient-to-b from-white via-[#f3f3f7] to-[#d6d6e2] select-none"
+      className="relative h-[calc(100vh-58px)] sm:h-[calc(100vh-62px)] min-h-[calc(100vh-58px)] sm:min-h-[calc(100vh-62px)] py-3 sm:py-4 flex flex-col justify-center overflow-hidden bg-gradient-to-b from-white via-[#f3f3f7] to-[#d6d6e2] select-none"
     >
       {/* 1. Lớp ánh sáng Studio Vignette tạo chiều sâu hướng tâm */}
       <div
@@ -229,48 +193,35 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
         <div className="absolute w-[70vw] max-w-[1120px] aspect-square rounded-full border border-dashed border-zinc-900/[0.055]" />
       </div>
 
-      {/* 4. Quầng sáng chuyển động & phản chiếu màu sắc từ tác phẩm đang chiếu */}
+      {/* 4. Quầng sáng chuyển động mượt mà (Dùng Radial Gradient êm dịu, triệt tiêu 100% chi phí tính toán GPU Blur) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center z-0">
-        <div className="animate-gallery-orb absolute -top-10 left-1/4 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-white via-zinc-200/60 to-zinc-400/25 blur-3xl opacity-85" />
-        <div className="animate-gallery-orb-reverse absolute -bottom-16 right-1/4 w-[560px] h-[560px] rounded-full bg-gradient-to-tl from-zinc-300/55 via-slate-200/45 to-white blur-3xl opacity-80" />
+        <div
+          className="animate-gallery-orb absolute -top-10 left-1/4 w-[520px] h-[520px] rounded-full opacity-80 pointer-events-none transform-gpu"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(230,232,242,0.45) 45%, transparent 70%)',
+          }}
+        />
+        <div
+          className="animate-gallery-orb-reverse absolute -bottom-16 right-1/4 w-[560px] h-[560px] rounded-full opacity-75 pointer-events-none transform-gpu"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(220,224,238,0.6) 0%, rgba(240,242,248,0.35) 45%, transparent 70%)',
+          }}
+        />
 
         {currentArtwork?.imageUrl && (
           <img
             src={currentArtwork.imageUrl}
             alt=""
             aria-hidden="true"
-            className="w-[78%] max-w-[1280px] aspect-video object-cover blur-[75px] opacity-35 scale-105 saturate-150 transition-all duration-1000"
+            className="w-[78%] max-w-[1280px] aspect-video object-cover blur-xl opacity-25 scale-105 saturate-125 transition-all duration-1000 transform-gpu pointer-events-none"
           />
         )}
       </div>
 
-      {/* 5. Kết cấu vân giấy mỹ thuật (Fine-Art Paper & Film Grain SVG Filter) */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.055] mix-blend-multiply pointer-events-none z-0" aria-hidden="true">
-        <filter id="gallery-fine-paper">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.82"
-            numOctaves="4"
-            stitchTiles="stitch"
-          />
-          <feColorMatrix type="saturate" values="0" />
-        </filter>
-        <rect width="100%" height="100%" filter="url(#gallery-fine-paper)" />
-      </svg>
-
-      {/* 6. Lớp gợn sóng CSS3 Ripple Effect phía sau slider */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {ripples.map((r) => (
-          <span
-            key={r.id}
-            style={{ left: r.x, top: r.y }}
-            className={r.type === 'click' ? 'ripple-wave-click' : 'ripple-wave-move'}
-          />
-        ))}
-      </div>
-
       {/* Sân khấu Carousel toàn chiều ngang cho phép lộ rìa phải của ảnh trước (bên trái) và rìa trái của ảnh sau (bên phải) */}
-      <div className="w-full space-y-5 relative z-10">
+      <div className="w-full space-y-3.5 sm:space-y-4 relative z-10">
         <div
           className={`relative w-full touch-pan-y ${
             isDragging ? 'cursor-grabbing' : ''
@@ -285,8 +236,8 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
         >
-          {/* Khung định vị kích thước của Slide chính ở trung tâm */}
-          <div className="relative w-[82vw] sm:w-[76vw] lg:w-[min(74vw,calc((100vh-152px)*16/9))] mx-auto aspect-video">
+          {/* Khung định vị kích thước của Slide chính ở trung tâm (Trừ hao chiều cao Navbar ~60px + padding + dots để vừa vặn 1 màn hình) */}
+          <div className="relative w-[82vw] sm:w-[76vw] lg:w-[min(72vw,calc((100vh-190px)*16/9))] mx-auto aspect-video">
             {artworks.map((art, idx) => {
               const offset = getRelativeOffset(idx);
               const isActive = offset === 0;

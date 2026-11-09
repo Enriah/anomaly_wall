@@ -354,7 +354,7 @@ export const FloatingPetals: React.FC<FloatingPetalsProps> = ({
             stopLoop();
           }
         },
-        { threshold: 0.02 }
+        { threshold: 0.05 }
       );
       observer.observe(targetElement);
     }
@@ -405,7 +405,6 @@ export const FloatingPetals: React.FC<FloatingPetalsProps> = ({
             opacity: petal.opacity,
             transformOrigin: '50% 50%',
             transition: 'none',
-            filter: 'drop-shadow(1px 4px 6px rgba(45, 60, 95, 0.22))',
             transform: `translate3d(${(petal.x - petal.width * 0.5).toFixed(2)}px, ${(petal.y - petal.height * 0.5).toFixed(2)}px, 0px) rotateZ(${petal.baseRotation}deg)`,
           }}
         >
@@ -415,6 +414,7 @@ export const FloatingPetals: React.FC<FloatingPetalsProps> = ({
             loading="eager"
             draggable={false}
             className="w-full h-full object-contain pointer-events-none select-none"
+            style={{ filter: 'drop-shadow(1px 3px 5px rgba(45, 60, 95, 0.20))' }}
           />
         </div>
       ))}
