@@ -26,9 +26,9 @@ export default {
         }
       },
       fontFamily: {
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        serif: ['"Chakra Petch"', 'system-ui', 'sans-serif'],
+        sans: ['"Chakra Petch"', 'system-ui', 'sans-serif'],
+        mono: ['"Chakra Petch"', 'system-ui', 'sans-serif'],
       },
       animation: {
         'spin-slow': 'spin 20s linear infinite',

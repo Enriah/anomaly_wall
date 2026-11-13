@@ -134,9 +134,11 @@ export const FloatingPetals: React.FC<FloatingPetalsProps> = ({
     };
   }, [containerRef]);
 
-  // Vòng lặp vật lý siêu nhẹ: Hoạt động ở mức 60FPS với 0% CPU rác bộ nhớ (Zero GC)
+  // Vòng lặp vật lý siêu nhẹ với bộ điều tốc thích ứng (30 FPS khi tĩnh, 60 FPS khi có sóng click)
   useEffect(() => {
     let isRunning = true;
+    const IDLE_FRAME_MS = 32.0;
+    const ACTIVE_FRAME_MS = 16.0;
 
     const updatePetals = () => {
       if (!isVisibleRef.current || !isTabActiveRef.current) {
@@ -145,14 +147,22 @@ export const FloatingPetals: React.FC<FloatingPetalsProps> = ({
       }
 
       const now = performance.now();
-      const dt = Math.min((now - lastTimeRef.current) / 1000, 0.05);
-      lastTimeRef.current = now;
+      const water = waterRef.current;
+      const ripples = water ? water.getRipples() : [];
+      const targetFrameMs = ripples.length > 0 ? ACTIVE_FRAME_MS : IDLE_FRAME_MS;
+      const elapsedMs = now - lastTimeRef.current;
+
+      if (elapsedMs < targetFrameMs) {
+        animIdRef.current = requestAnimationFrame(updatePetals);
+        return;
+      }
+
+      const dt = Math.min(elapsedMs / 1000, 0.05);
+      lastTimeRef.current = now - (elapsedMs % targetFrameMs);
 
       // Đọc từ bộ nhớ đệm (0ns, không trigger layout recalculation)
       const { cw, ch, aspect } = boundsRef.current;
 
-      const water = waterRef.current;
-      const ripples = water ? water.getRipples() : [];
       const startTime = water ? water.getStartTime() : 0;
       const waterTime = (now - startTime) / 1000;
 

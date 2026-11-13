@@ -15,6 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onReplayIntro,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<'home' | 'slider' | 'projects'>('home');
   const [isSoundActive, setIsSoundActive] = useState(false);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [oscillatorNode, setOscillatorNode] = useState<{ osc: OscillatorNode; gain: GainNode } | null>(null);
@@ -86,8 +87,33 @@ export const Navbar: React.FC<NavbarProps> = ({
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 40);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const sectionIds: ('home' | 'slider' | 'projects')[] = ['home', 'slider', 'projects'];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = entry.target.id as 'home' | 'slider' | 'projects';
+            setActiveSection(id);
+          }
+        }
+      },
+      {
+        rootMargin: '-45% 0px -45% 0px',
+        threshold: 0,
+      }
+    );
+
+    for (const id of sectionIds) {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   // Ambient soundscape generator using Web Audio API
@@ -185,11 +211,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           </a>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2 sm:gap-5 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             {/* Nút cuộn lên đầu trang (Home) */}
             <button
               onClick={() => smoothScrollToTop(750)}
-              className="px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
+              className={`px-2 sm:px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black transition-all duration-200 ${
+                activeSection === 'home'
+                  ? 'bg-black/20 ring-1 ring-black/25 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)]'
+                  : 'hover:bg-black/10'
+              }`}
             >
               {lang === 'vi' ? 'Trang chủ' : 'Home'}
             </button>
@@ -200,7 +230,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 const sliderEl = document.getElementById('slider');
                 smoothScrollToElement(sliderEl, 750);
               }}
-              className="hidden sm:inline-block px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
+              className={`hidden sm:inline-block px-2 sm:px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black transition-all duration-200 ${
+                activeSection === 'slider'
+                  ? 'bg-black/20 ring-1 ring-black/25 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)]'
+                  : 'hover:bg-black/10'
+              }`}
             >
               {lang === 'vi' ? 'Bộ sưu tập' : 'Gallery'}
             </button>
@@ -211,7 +245,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 const projectsEl = document.getElementById('projects');
                 smoothScrollToElement(projectsEl, 750);
               }}
-              className="px-1 sm:px-1.5 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black hover:opacity-70 transition-opacity"
+              className={`px-2 sm:px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-black transition-all duration-200 ${
+                activeSection === 'projects'
+                  ? 'bg-black/20 ring-1 ring-black/25 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)]'
+                  : 'hover:bg-black/10'
+              }`}
             >
               {lang === 'vi' ? 'Dự án' : 'Project'}
             </button>

@@ -19,6 +19,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [isSliderInView, setIsSliderInView] = useState(false);
   const [dragOffset, setDragOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const dragStartXRef = useRef<number>(0);
@@ -28,14 +29,44 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
   const pointerIdRef = useRef<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Tự động chuyển slide mỗi 4.5 giây
+  // Chỉ tự động chuyển slide khi Slider thực sự nằm trong vùng nhìn thấy và tab đang mở
   useEffect(() => {
-    if (!isAutoPlay) return;
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSliderInView(Boolean(entry?.isIntersecting) && !document.hidden);
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setIsSliderInView(false);
+      } else {
+        const rect = el.getBoundingClientRect();
+        const inView = rect.bottom > 0 && rect.top < window.innerHeight;
+        setIsSliderInView(inView);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
+
+  // Tự động chuyển slide mỗi 4.5 giây (chỉ chạy khi slider đang hiển thị)
+  useEffect(() => {
+    if (!isAutoPlay || !isSliderInView) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % artworks.length);
     }, 4500);
     return () => clearInterval(interval);
-  }, [isAutoPlay, artworks.length]);
+  }, [isAutoPlay, isSliderInView, artworks.length]);
 
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev - 1 + artworks.length) % artworks.length);
@@ -148,7 +179,6 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
     pointerIdRef.current = null;
   };
 
-  const currentArtwork = artworks[currentIndex];
   const totalSlides = artworks.length;
 
   // Tính vị trí tương đối (-2, -1, 0, 1, 2) của từng slide so với slide chính
@@ -191,33 +221,6 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
       <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center z-0">
         <div className="w-[92vw] max-w-[1480px] aspect-square rounded-full border border-zinc-900/[0.045]" />
         <div className="absolute w-[70vw] max-w-[1120px] aspect-square rounded-full border border-dashed border-zinc-900/[0.055]" />
-      </div>
-
-      {/* 4. Quầng sáng chuyển động mượt mà (Dùng Radial Gradient êm dịu, triệt tiêu 100% chi phí tính toán GPU Blur) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center z-0">
-        <div
-          className="animate-gallery-orb absolute -top-10 left-1/4 w-[520px] h-[520px] rounded-full opacity-80 pointer-events-none transform-gpu"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(230,232,242,0.45) 45%, transparent 70%)',
-          }}
-        />
-        <div
-          className="animate-gallery-orb-reverse absolute -bottom-16 right-1/4 w-[560px] h-[560px] rounded-full opacity-75 pointer-events-none transform-gpu"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(220,224,238,0.6) 0%, rgba(240,242,248,0.35) 45%, transparent 70%)',
-          }}
-        />
-
-        {currentArtwork?.imageUrl && (
-          <img
-            src={currentArtwork.imageUrl}
-            alt=""
-            aria-hidden="true"
-            className="w-[78%] max-w-[1280px] aspect-video object-cover blur-xl opacity-25 scale-105 saturate-125 transition-all duration-1000 transform-gpu pointer-events-none"
-          />
-        )}
       </div>
 
       {/* Sân khấu Carousel toàn chiều ngang cho phép lộ rìa phải của ảnh trước (bên trái) và rìa trái của ảnh sau (bên phải) */}
@@ -278,22 +281,22 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                   style={{
                     transform: transformStyle,
                     zIndex: isActive ? 30 : isPrev || isNext ? 20 : 10,
+                    willChange: isVisible ? 'transform, opacity' : 'auto',
                     transition: isDragging
                       ? 'none'
-                      : 'transform 700ms cubic-bezier(0.22,1,0.36,1), opacity 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms cubic-bezier(0.22,1,0.36,1)',
+                      : 'transform 700ms cubic-bezier(0.22,1,0.36,1), opacity 700ms cubic-bezier(0.22,1,0.36,1)',
                   }}
-                  className={`absolute inset-0 w-full h-full overflow-hidden bg-[#0c0c14] select-none ${
+                  className={`absolute inset-0 w-full h-full overflow-hidden bg-[#0c0c14] select-none shadow-[0_28px_64px_-15px_rgba(10,10,22,0.58)] ${
                     isVisible ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'
                   } ${
-                    isActive
-                      ? 'shadow-[0_38px_90px_-15px_rgba(10,10,22,0.72),0_18px_40px_-10px_rgba(10,10,22,0.45)] group'
-                      : 'shadow-[0_20px_50px_-12px_rgba(10,10,22,0.45)] group/side hover:shadow-[0_25px_60px_-10px_rgba(10,10,22,0.65)]'
+                    isActive ? 'group' : 'group/side'
                   }`}
                 >
                   {art.imageUrl ? (
                     <img
                       src={art.imageUrl}
                       alt={`${typeof art.title === 'object' ? art.title[lang] : art.title} ${typeof art.subtitle === 'object' ? art.subtitle[lang] : art.subtitle}`}
+                      decoding="async"
                       className="w-full h-full object-cover select-none pointer-events-none"
                       draggable={false}
                     />
@@ -325,10 +328,16 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                       isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                   >
-                    {/* Góc trên bên trái: Tên dự án kèm hiệu ứng mờ đen */}
+                    {/* Góc trên bên trái: Tên dự án kèm hiệu ứng mờ đen tỏa tròn mượt mà (không cạnh cứng, không tốn GPU blur) */}
                     {art.project && (
                       <>
-                        <div className="absolute top-0 left-0 w-[360px] h-36 bg-gradient-to-br from-black/85 via-black/45 to-transparent blur-md pointer-events-none" />
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background:
+                              'radial-gradient(ellipse 42% 32% at 0% 0%, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.28) 45%, transparent 100%)',
+                          }}
+                        />
                         <div className="absolute top-5 left-6 sm:top-7 sm:left-8 pointer-events-none">
                           <span className="font-display text-lg sm:text-2xl font-bold text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
                             {art.project}
@@ -337,8 +346,14 @@ export const Hero: React.FC<HeroProps> = ({ lang, onSelectArtwork }) => {
                       </>
                     )}
 
-                    {/* Hiệu ứng làm mờ & tối nhẹ lan tỏa tự nhiên ở góc dưới bên trái để làm nổi chữ */}
-                    <div className="absolute bottom-0 left-0 w-[420px] h-44 bg-gradient-to-tr from-black/85 via-black/45 to-transparent blur-md pointer-events-none" />
+                    {/* Hiệu ứng tối nhẹ lan tỏa tự nhiên ở góc dưới bên trái để làm nổi chữ */}
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background:
+                          'radial-gradient(ellipse 58% 42% at 0% 100%, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.32) 48%, transparent 100%)',
+                      }}
+                    />
 
                     {/* Nhãn thông tin góc dưới bên trái không có khung viền */}
                     <div className="absolute bottom-5 left-6 sm:bottom-7 sm:left-8 pointer-events-none">

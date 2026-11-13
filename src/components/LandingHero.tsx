@@ -75,35 +75,6 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ lang }) => {
       {/* 2. Cánh hoa anh đào lững thững trôi, dập dềnh nhô lên hạ xuống và bật nhẹ vào 4 mép trang */}
       <FloatingPetals containerRef={sectionRef} waterRef={waterRef} />
 
-      {/* 2. Lưới kiến trúc siêu mảnh chìm mờ dần ra rìa (Architectural Micro-Grid) */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[1] opacity-45"
-        style={{
-          backgroundSize: '52px 52px',
-          backgroundImage:
-            'linear-gradient(to right, rgba(15, 15, 30, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(15, 15, 30, 0.04) 1px, transparent 1px)',
-          maskImage: 'radial-gradient(ellipse 75% 70% at 50% 50%, black 40%, transparent 95%)',
-          WebkitMaskImage:
-            'radial-gradient(ellipse 75% 70% at 50% 50%, black 40%, transparent 95%)',
-        }}
-      />
-
-      {/* 3. Vòng tròn hình học thiên thể chìm đồng tâm (Celestial Geometric Rings) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center z-[1] opacity-60">
-        <div className="w-[88vw] max-w-[1360px] aspect-square rounded-full border border-zinc-900/[0.035]" />
-        <div className="absolute w-[66vw] max-w-[1020px] aspect-square rounded-full border border-dashed border-zinc-900/[0.045]" />
-        <div className="absolute w-[44vw] max-w-[680px] aspect-square rounded-full border border-zinc-900/[0.03]" />
-      </div>
-
-      {/* 4. Kết cấu vi hạt giấy mỹ thuật cao cấp siêu nhẹ (GPU-accelerated micro-grain) */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[1] opacity-[0.025] transform-gpu"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.45) 1px, transparent 0)',
-          backgroundSize: '8px 8px',
-        }}
-      />
-
       {/* Spacer đỉnh để căn chỉnh trung tâm hoàn hảo */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4" />
 

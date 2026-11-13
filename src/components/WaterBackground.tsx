@@ -40,6 +40,7 @@ precision mediump float;
 varying vec2 v_uv;
 uniform vec2 u_resolution;
 uniform float u_time;
+uniform vec4 u_amb; // x: mod1, y: mod2, z: t * 0.65, w: halfW
 uniform int u_num_ripples;
 uniform vec4 u_ripples[8]; // Hỗ trợ tối đa 8 đợt sóng đồng thời: x, y, startTime, strength
 
@@ -83,23 +84,17 @@ void addWaveAnalytical(inout vec3 acc, vec2 p, vec2 src, float radius, float pac
   acc.yz += dDist * dir;
 }
 
-// Sóng dao động tự nhiên trên mặt nước (Phép toán giải tích 1-Pass)
-vec3 getAmbientSurface(vec2 p, float t, vec2 aspect) {
-  float t1 = t * 0.8;
-  float t2 = t * 0.95;
-  float halfW = aspect.x * 0.5;
-  
-  float arg1 = 2.5 * (p.x - halfW);
-  float mod1 = sin(2.5 * halfW + t1) * 0.016;
-  float w1 = cos(arg1) * mod1;
-  float dw1_dx = -2.5 * sin(arg1) * mod1;
+// Sóng dao động tự nhiên trên mặt nước (Phép toán giải tích 1-Pass, nhận hệ số mod1/mod2 tính sẵn từ CPU)
+vec3 getAmbientSurface(vec2 p) {
+  float arg1 = 2.5 * (p.x - u_amb.w);
+  float w1 = cos(arg1) * u_amb.x;
+  float dw1_dx = -2.5 * sin(arg1) * u_amb.x;
   
   float arg2 = 3.2 * (p.y - 0.5);
-  float mod2 = sin(1.6 + t2) * 0.014;
-  float w2 = cos(arg2) * mod2;
-  float dw2_dy = -3.2 * sin(arg2) * mod2;
+  float w2 = cos(arg2) * u_amb.y;
+  float dw2_dy = -3.2 * sin(arg2) * u_amb.y;
   
-  float arg3 = p.x * 1.6 + p.y * 2.0 - t * 0.65;
+  float arg3 = p.x * 1.6 + p.y * 2.0 - u_amb.z;
   float w3 = sin(arg3) * 0.009;
   float c3 = cos(arg3) * 0.009;
   float dw3_dx = 1.6 * c3;
@@ -170,11 +165,19 @@ vec3 getClickSurface(vec2 p, float t, vec2 aspect) {
         if (radius > (H + c.y)) {
           addWaveAnalytical(rippleAcc, p, vec2(c.x, -2.0 * H + c.y), radius, packetLen, 0.42); // Trên -> Dưới
         }
-        // Dội tiếp giữa 2 bờ kề cận (góc):
-        addWaveAnalytical(rippleAcc, p, vec2(-c.x, -c.y), radius, packetLen, 0.36); // Trái <-> Dưới
-        addWaveAnalytical(rippleAcc, p, vec2(-c.x, 2.0 * H - c.y), radius, packetLen, 0.36); // Trái <-> Trên
-        addWaveAnalytical(rippleAcc, p, vec2(2.0 * W - c.x, -c.y), radius, packetLen, 0.36); // Phải <-> Dưới
-        addWaveAnalytical(rippleAcc, p, vec2(2.0 * W - c.x, 2.0 * H - c.y), radius, packetLen, 0.36); // Phải <-> Trên
+        // Dội tiếp giữa 2 bờ kề cận (góc) - có Culling hình học:
+        if (radius > length(vec2(c.x, c.y))) {
+          addWaveAnalytical(rippleAcc, p, vec2(-c.x, -c.y), radius, packetLen, 0.36); // Trái <-> Dưới
+        }
+        if (radius > length(vec2(c.x, H - c.y))) {
+          addWaveAnalytical(rippleAcc, p, vec2(-c.x, 2.0 * H - c.y), radius, packetLen, 0.36); // Trái <-> Trên
+        }
+        if (radius > length(vec2(W - c.x, c.y))) {
+          addWaveAnalytical(rippleAcc, p, vec2(2.0 * W - c.x, -c.y), radius, packetLen, 0.36); // Phải <-> Dưới
+        }
+        if (radius > length(vec2(W - c.x, H - c.y))) {
+          addWaveAnalytical(rippleAcc, p, vec2(2.0 * W - c.x, 2.0 * H - c.y), radius, packetLen, 0.36); // Phải <-> Trên
+        }
       }
       
       // 4. ĐẾN MÉP THỨ 3: TUYỆT ĐỐI KHÔNG BẬT LẠI NỮA
@@ -191,7 +194,7 @@ void main() {
   vec2 p = vec2(uv.x * aspect.x, uv.y);
   
   // TỐI ƯU TOÁN HỌC ĐỈNH CAO: Tính toán bề mặt và pháp tuyến trong 1 Pass duy nhất (Single Pass)
-  vec3 amb = getAmbientSurface(p, t, aspect);
+  vec3 amb = getAmbientSurface(p);
   vec3 rip = getClickSurface(p, t, aspect);
   vec3 surf = amb + rip;
   
@@ -200,12 +203,9 @@ void main() {
   float normalScale = 0.38;
   vec3 normal = normalize(vec3(-surf.y * normalScale, -surf.z * normalScale, 1.0));
 
-  // Hướng nguồn sáng chính (Studio Light phía trên bên trái)
-  vec3 lightDir = normalize(vec3(0.28, 0.52, 0.81));
-  vec3 viewDir = vec3(0.0, 0.0, 1.0);
-  vec3 halfVec = normalize(lightDir + viewDir);
-
-  float NdotL = dot(normal, lightDir);
+  // Hướng nguồn sáng chính (đã chuẩn hóa sẵn thành hằng số, không cần normalize mỗi pixel)
+  const vec3 viewDir = vec3(0.0, 0.0, 1.0);
+  const vec3 halfVec = vec3(0.1466, 0.2722, 0.9510);
   
   // TỐI ƯU HÓA LŨY THỪA NHỊ PHÂN: Thay hàm pow() đắt đỏ bằng các phép nhân liên tiếp
   // Tiết kiệm 100% tài nguyên đơn vị xử lý siêu việt SFU trên GPU tích hợp Intel UHD
@@ -362,15 +362,16 @@ export const WaterBackground = forwardRef<WaterBackgroundHandle, WaterBackground
       // Định vị các Uniforms
       const uResolutionLocation = gl.getUniformLocation(program, 'u_resolution');
       const uTimeLocation = gl.getUniformLocation(program, 'u_time');
+      const uAmbLocation = gl.getUniformLocation(program, 'u_amb');
       const uNumRipplesLocation = gl.getUniformLocation(program, 'u_num_ripples');
       const uRipplesLocation = gl.getUniformLocation(program, 'u_ripples');
 
-      // Tự động điều chỉnh kích thước Canvas: Giới hạn DPR ở mức 0.85 giúp giảm hơn 50% điểm ảnh (Pixel Fill-rate)
-      // Trong khi bộ lọc Bilinear Smoothing của WebGL tự động làm mịn sóng nước, hoàn toàn không răng cưa
+      // Tự động điều chỉnh kích thước Canvas: Giới hạn DPR ở mức 0.45 giúp giảm ~72% điểm ảnh (Pixel Fill-rate)
+      // Sóng nước có tần số thấp và mượt nên bộ lọc Bilinear Smoothing của WebGL tự động làm mịn hoàn hảo, không răng cưa
       const resize = () => {
-        const dpr = Math.min(window.devicePixelRatio || 1, 0.85);
-        const displayWidth = Math.floor(canvas.clientWidth * dpr);
-        const displayHeight = Math.floor(canvas.clientHeight * dpr);
+        const dpr = Math.min(window.devicePixelRatio || 1, 0.45);
+        const displayWidth = Math.max(320, Math.floor(canvas.clientWidth * dpr));
+        const displayHeight = Math.max(240, Math.floor(canvas.clientHeight * dpr));
 
         if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
           canvas.width = displayWidth;
@@ -383,12 +384,14 @@ export const WaterBackground = forwardRef<WaterBackgroundHandle, WaterBackground
       const resizeObserver = new ResizeObserver(resize);
       resizeObserver.observe(canvas);
 
-      // Vòng lặp Render WebGL (Render Loop) với bộ điều tốc 60 FPS (Governor)
-      // Tránh việc màn hình 120Hz/144Hz ép GPU Intel UHD chạy render 144 lần/giây gây quá tải 100%
+      // Vòng lặp Render WebGL thích ứng (Adaptive Frame Governor):
+      // - Khi mặt nước tĩnh (không có ripple): chạy 30 FPS (~32ms) tiết kiệm 50% GPU mà vẫn mượt hoàn toàn
+      // - Khi có sóng click (ripple active): tự động tăng lên ~55-60 FPS (~16ms) để gợn sóng sắc nét
       let isRendering = false;
       const rippleData = rippleBufferRef.current;
       let lastFrameTime = performance.now();
-      const FRAME_MIN_MS = 15.0; // Giới hạn tối đa 60 FPS (~16.6ms)
+      const IDLE_FRAME_MS = 32.0;   // ~30 FPS khi chỉ có sóng tự nhiên
+      const ACTIVE_FRAME_MS = 16.0; // ~60 FPS khi có sóng click đang lan tỏa
 
       const render = (currentTime: number) => {
         if (!isVisibleRef.current || !isTabActiveRef.current) {
@@ -399,15 +402,23 @@ export const WaterBackground = forwardRef<WaterBackgroundHandle, WaterBackground
 
         animIdRef.current = requestAnimationFrame(render);
 
+        const hasActiveRipples = ripplesRef.current.length > 0;
+        const targetFrameMs = hasActiveRipples ? ACTIVE_FRAME_MS : IDLE_FRAME_MS;
         const delta = currentTime - lastFrameTime;
-        if (delta < FRAME_MIN_MS) {
-          return; // Bỏ qua frame thừa trên màn hình tần số quét cao (120Hz/144Hz)
+        if (delta < targetFrameMs) {
+          return;
         }
-        lastFrameTime = currentTime - (delta % 16.666);
+        lastFrameTime = currentTime - (delta % targetFrameMs);
 
         const now = (currentTime - startTimeRef.current) / 1000;
+        const aspectX = canvas.width / Math.max(canvas.height, 1);
+        const halfW = aspectX * 0.5;
+        const mod1 = Math.sin(2.5 * halfW + now * 0.8) * 0.016;
+        const mod2 = Math.sin(1.6 + now * 0.95) * 0.014;
+
         gl.uniform2f(uResolutionLocation, canvas.width, canvas.height);
         gl.uniform1f(uTimeLocation, now);
+        gl.uniform4f(uAmbLocation, mod1, mod2, now * 0.65, halfW);
 
         // Chuẩn bị dữ liệu cho mảng đợt sóng trên bộ đệm tĩnh (Contiguous Packing - Không để lại lỗ hổng)
         const ripples = ripplesRef.current;
@@ -518,8 +529,8 @@ export const WaterBackground = forwardRef<WaterBackgroundHandle, WaterBackground
     return (
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full pointer-events-none z-0 transform-gpu"
-        style={{ display: 'block', willChange: 'transform' }}
+        className="absolute inset-0 w-full h-full pointer-events-none z-0"
+        style={{ display: 'block' }}
       />
     );
   }

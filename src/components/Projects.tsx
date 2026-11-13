@@ -15,7 +15,7 @@ const getLocalized = (
   return val[currentLang] || val.vi || '';
 };
 
-type ProjectTab = 'overview' | 'album' | 'development' | 'story';
+type ProjectTab = 'overview' | 'album' | 'development' | 'story' | 'news';
 
 interface ProjectsProps {
   lang: 'vi' | 'en';
@@ -229,6 +229,10 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
       id: 'story',
       label: { vi: 'Cốt truyện', en: 'Story / Lore' },
     },
+    {
+      id: 'news',
+      label: { vi: 'Tin tức', en: 'News' },
+    },
   ];
 
   return (
@@ -293,16 +297,22 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                         >
                           {project.isComingSoon
                             ? (lang === 'vi' ? 'Sắp ra mắt' : 'Coming Soon')
+                            : project.cardLines
+                            ? project.cardLines.map((line, i) => (
+                                <span
+                                  key={i}
+                                  className={
+                                    i === 0
+                                      ? 'block leading-tight'
+                                      : 'block text-lg font-semibold text-zinc-200 tracking-wide leading-tight mt-0.5'
+                                  }
+                                >
+                                  {line}
+                                </span>
+                              ))
                             : getLocalized(project.title, lang)}
                         </h3>
                       </div>
-                      {project.tag && (
-                        <div>
-                          <span className="inline-block px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest text-zinc-200 bg-white/10 border border-white/30">
-                            {lang === 'vi' && project.tag.toLowerCase() === 'game' ? 'TRÒ CHƠI' : project.tag.toUpperCase()}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -392,6 +402,16 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                   const currentAlbum = albums[selectedAlbumIndex] || albums[0];
                   const albumArtworks = currentAlbum ? currentAlbum.artworks : (activeProject.artworks || []);
                   const currentArt = albumArtworks[selectedArtIndex] || albumArtworks[0];
+
+                  if (albums.length === 0 && albumArtworks.length === 0) {
+                    return (
+                      <p className="text-sm font-mono text-zinc-500 py-8">
+                        {lang === 'vi'
+                          ? 'Album hình ảnh cho dự án này đang được cập nhật.'
+                          : 'Artwork album for this project is currently being updated.'}
+                      </p>
+                    );
+                  }
 
                   const prevArt = (e?: React.MouseEvent) => {
                     e?.stopPropagation();
@@ -689,7 +709,8 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                 })()}
 
                 {/* 3. DEVELOPMENT (TOOLS & GITHUB REPO & NOTES) */}
-                {activeTab === 'development' && activeProject.development && (
+                {activeTab === 'development' && (
+                  activeProject.development ? (
                   <div className="space-y-6 max-w-4xl">
                     {/* Tool & GitHub Repository Section */}
                     {activeProject.development.toolProject && (
@@ -701,8 +722,8 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                           </h4>
                         </div>
 
-                        {/* GitHub Repository Card */}
-                        <div className="p-5 sm:p-6 bg-[#090912] border border-white/10 hover:border-white/30 transition-all duration-300">
+                        {/* GitHub Repository Card (Frameless with hover highlight) */}
+                        <div className="px-4 py-5 sm:px-5 sm:py-6 hover:bg-white/[0.04] transition-colors duration-200">
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="space-y-2 min-w-0 flex-1">
                               <div className="flex items-center gap-2.5">
@@ -721,7 +742,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                                   {activeProject.development.toolProject.tags.map((tag) => (
                                     <span
                                       key={tag}
-                                      className="px-2.5 py-0.5 text-[10px] font-mono text-zinc-400 bg-white/[0.03] border border-white/10"
+                                      className="px-2.5 py-0.5 text-[10px] font-mono text-zinc-300 bg-white/[0.06]"
                                     >
                                       {tag}
                                     </span>
@@ -782,18 +803,14 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                       </div>
                     )}
 
-                    {/* Development Notes */}
-                    {activeProject.development.notes && (
-                      <div className="space-y-2 pt-2 border-t border-white/10">
-                        <h4 className="font-mono text-xs uppercase tracking-widest text-white">
-                          {lang === 'vi' ? 'Ghi chú phát triển' : 'Development Notes'}
-                        </h4>
-                        <p className="text-sm text-zinc-300 font-light leading-relaxed">
-                          {activeProject.development.notes[lang]}
-                        </p>
-                      </div>
-                    )}
                   </div>
+                  ) : (
+                    <p className="text-sm font-mono text-zinc-500 py-8">
+                      {lang === 'vi'
+                        ? 'Thông tin quá trình phát triển cho dự án này đang được cập nhật.'
+                        : 'Development details for this project are currently being updated.'}
+                    </p>
+                  )
                 )}
 
                 {/* 4. CỐT TRUYỆN (STORY / LORE) */}
@@ -989,7 +1006,7 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                         </div>
                       </>
                     ) : (
-                      activeProject.story && (
+                      activeProject.story ? (
                         <div className="space-y-6">
                           <div className="space-y-2 border-l-2 border-white pl-4">
                             <span className="font-mono text-[10px] uppercase tracking-widest text-white">
@@ -1016,7 +1033,48 @@ export const Projects: React.FC<ProjectsProps> = ({ lang, externalSelection }) =
                             ))}
                           </div>
                         </div>
+                      ) : (
+                        <p className="text-sm font-mono text-zinc-500 py-8">
+                          {lang === 'vi'
+                            ? 'Cốt truyện cho dự án này đang được cập nhật.'
+                            : 'Story & lore for this project are currently being updated.'}
+                        </p>
                       )
+                    )}
+                  </div>
+                )}
+
+                {/* 5. NEWS (TIN TỨC & CẬP NHẬT DỰ ÁN) */}
+                {activeTab === 'news' && (
+                  <div className="space-y-4 max-w-4xl">
+                    {activeProject.news && activeProject.news.length > 0 ? (
+                      <div className="divide-y divide-white/[0.07]">
+                        {activeProject.news.map((item) => (
+                          <article
+                            key={item.id}
+                            className="group px-4 py-5 sm:px-5 sm:py-6 hover:bg-white/[0.04] transition-colors duration-200 space-y-2.5"
+                          >
+                            <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono">
+                              <span className="px-2 py-0.5 uppercase tracking-wider text-zinc-200 bg-white/10">
+                                {item.category[lang]}
+                              </span>
+                              <time className="text-zinc-500">{item.date}</time>
+                            </div>
+                            <h4 className="font-display text-lg sm:text-xl font-bold text-zinc-100 group-hover:text-white tracking-tight transition-colors">
+                              {item.title[lang]}
+                            </h4>
+                            <p className="text-xs sm:text-sm text-zinc-400 group-hover:text-zinc-300 font-light leading-relaxed transition-colors">
+                              {item.summary[lang]}
+                            </p>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm font-mono text-zinc-500 py-8">
+                        {lang === 'vi'
+                          ? 'Chưa có tin tức nào cho dự án này.'
+                          : 'No news available for this project yet.'}
+                      </p>
                     )}
                   </div>
                 )}

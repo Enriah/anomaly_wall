@@ -57,9 +57,27 @@ export interface ProjectStory {
   }[];
 }
 
+export interface ProjectNewsItem {
+  id: string;
+  date: string;
+  category: {
+    vi: string;
+    en: string;
+  };
+  title: {
+    vi: string;
+    en: string;
+  };
+  summary: {
+    vi: string;
+    en: string;
+  };
+}
+
 export interface ProjectItem {
   id: string;
   title: string;
+  cardLines?: string[];
   isComingSoon: boolean;
   tag?: string;
   details?: {
@@ -70,6 +88,7 @@ export interface ProjectItem {
   artworks?: ProjectArtwork[];
   development?: ProjectDevelopment;
   story?: ProjectStory;
+  news?: ProjectNewsItem[];
 }
 
 export interface ArtworkSlide {
@@ -91,8 +110,8 @@ export const PROJECTS_DATA: ProjectItem[] = [
     isComingSoon: false,
     tag: 'game',
     details: {
-      vi: 'FinalStars là dự án game và vũ trụ nghệ thuật giả tưởng nguyên bản do Enriah & AnomalyWall phát triển, tập trung vào chiều sâu thế giới quan, thiết kế mỹ thuật 2D sắc nét và cơ chế nhập vai chiến thuật.',
-      en: 'FinalStars is an original fantasy game and artistic universe developed by Enriah & AnomalyWall, focusing on deep world-building, atmospheric 2D art direction, and tactical RPG mechanics.',
+      vi: 'FinalStars là series game cốt truyện tuyến tính hiện tại đang trong quá trình lên kế hoạch triển khai.',
+      en: 'FinalStars is a linear story-driven game series currently in the planning and pre-production phase.',
     },
     albums: [
       {
@@ -112,7 +131,10 @@ export const PROJECTS_DATA: ProjectItem[] = [
         artworks: [
           {
             id: 'sal-1',
-            title: 'Khu Rừng Cấm',
+            title: {
+              vi: 'Khu Rừng Cấm',
+              en: 'The Forbidden Forest',
+            },
             subtitle: {
               vi: 'Rừng Lulla - Saldevie',
               en: 'Lulla Forest - Saldevie',
@@ -126,7 +148,10 @@ export const PROJECTS_DATA: ProjectItem[] = [
           },
           {
             id: 'sal-2',
-            title: 'Hồ Larimor',
+            title: {
+              vi: 'Hồ Larimor',
+              en: 'Lake Larimor',
+            },
             subtitle: {
               vi: 'Dãy Southel',
               en: 'Southel Mountain',
@@ -136,7 +161,10 @@ export const PROJECTS_DATA: ProjectItem[] = [
           },
           {
             id: 'sal-3',
-            title: 'Đường Mòn Tuyết phủ',
+            title: {
+              vi: 'Đường Mòn Tuyết phủ',
+              en: 'Snow-Covered Trail',
+            },
             subtitle: {
               vi: 'Rừng Lá Kim Lanac',
               en: 'Lanac Coniferous Forest',
@@ -146,7 +174,10 @@ export const PROJECTS_DATA: ProjectItem[] = [
           },
           {
             id: 'sal-4',
-            title: 'Eo Biển Volrage',
+            title: {
+              vi: 'Eo Biển Volrage',
+              en: 'Volrage Strait',
+            },
             subtitle: {
               vi: 'Tây Bắc Dãy Southel',
               en: 'Northwest of the Southel Range',
@@ -156,7 +187,10 @@ export const PROJECTS_DATA: ProjectItem[] = [
           },
           {
             id: 'sal-5',
-            title: 'Thị Trấn Lanac',
+            title: {
+              vi: 'Thị Trấn Lanac',
+              en: 'Lanac Town',
+            },
             subtitle: {
               vi: 'Thung Lũng dãy Southel',
               en: 'Southel Mountain Valley',
@@ -183,7 +217,10 @@ export const PROJECTS_DATA: ProjectItem[] = [
         artworks: [
           {
             id: 'adious-1',
-            title: 'Đồng Cỏ Sương eo biển Ririnoth',
+            title: {
+              vi: 'Đồng Cỏ Sương eo biển Ririnoth',
+              en: 'Misty Meadow of Ririnoth Strait',
+            },
             subtitle: {
               vi: 'Phía Đông vùng Runoroth',
               en: 'Runoroth East',
@@ -193,7 +230,10 @@ export const PROJECTS_DATA: ProjectItem[] = [
           },
           {
             id: 'adious-2',
-            title: 'Hẻm Núi Sa Thạch',
+            title: {
+              vi: 'Hẻm Núi Sa Thạch',
+              en: 'Sandstone Canyon',
+            },
             subtitle: {
               vi: 'Vùng Núi Đá Cằn Cỗi miền Viễn Tây',
               en: 'Western Arid Canyons',
@@ -203,7 +243,10 @@ export const PROJECTS_DATA: ProjectItem[] = [
           },
           {
             id: 'adious-3',
-            title: 'Cầu Aou',
+            title: {
+              vi: 'Cầu Aou',
+              en: 'Aou Bridge',
+            },
             subtitle: {
               vi: 'Sông Aou - Huyết Mạch Adious',
               en: 'Aou River — Artery of Adious',
@@ -408,22 +451,6 @@ export const PROJECTS_DATA: ProjectItem[] = [
         subtitle: { vi: 'Tranh minh họa chính', en: 'Key Visual Illustration' },
       },
     ],
-    development: {
-      toolProject: {
-        name: 'finalstars_gp_tool',
-        repo: 'Enriah/finalstars_gp_tool',
-        description: {
-          vi: 'Công cụ chuyên dụng quản lý và biên soạn cơ chế gameplay cho dự án FinalStars.',
-          en: 'Tool for managing the gameplay of FinalStars Project.',
-        },
-        githubUrl: 'https://github.com/Enriah/finalstars_gp_tool',
-        tags: ['Gameplay Management', 'Game Tool', 'GitHub Repository'],
-      },
-      notes: {
-        vi: 'Hệ thống phát triển kết hợp pipeline dựng cảnh 2.5D, shader ánh sáng môi trường thời gian thực và bộ công cụ quản lý nhánh cốt truyện tương tác.',
-        en: 'Development pipeline combining 2.5D environment staging, real-time atmospheric lighting shaders, and custom interactive narrative branching tools.',
-      },
-    },
     story: {
       synopsis: {
         vi: 'Khi những vì sao cuối cùng trên bầu trời cổ đại dần lụi tàn, thế giới rơi vào kỷ nguyên chạng vạng vĩnh cửu. Tại khu rừng cấm Saldevie, những kẻ lữ hành mang dấu ấn Tinh Cầu bắt đầu hành trình đánh thức di sản bị lãng quên.',
@@ -446,11 +473,85 @@ export const PROJECTS_DATA: ProjectItem[] = [
         },
       ],
     },
+    news: [
+      {
+        id: 'fs-news-1',
+        date: '2026-11-10',
+        category: { vi: 'Cập nhật Web', en: 'Web Update' },
+        title: {
+          vi: 'Ra mắt không gian trưng bày AnomalyWall & chuyên mục Tin tức dự án',
+          en: 'Launch of AnomalyWall Showcase & Project News Hub',
+        },
+        summary: {
+          vi: 'Hoàn thiện giao diện trưng bày trực tuyến với hiệu ứng mặt nước tương tác, bộ sưu tập 2D và nhật ký phát triển cho FinalStars.',
+          en: 'Completed the online showcase featuring interactive WebGL water surface, 2D artwork gallery, and development logs for FinalStars.',
+        },
+      },
+      {
+        id: 'fs-news-3',
+        date: '2026-09-15',
+        category: { vi: 'Mỹ thuật', en: 'Art Direction' },
+        title: {
+          vi: 'Hoàn thiện bộ concept địa danh lục địa Saldevie & Adious',
+          en: 'Completed Concept Art Series for Saldevie & Adious',
+        },
+        summary: {
+          vi: 'Bổ sung các bức tranh phong cảnh 2D về Rừng Cấm Saldevie, Hồ Larimor, Eo Biển Volrage và Đồng Cỏ Sương Ririnoth vào Album chính thức.',
+          en: 'Added 2D environment artworks of Saldevie Forbidden Forest, Lake Larimor, Volrage Strait, and Ririnoth Mist Meadow to the official Album.',
+        },
+      },
+    ],
   },
   {
-    id: 'project-2',
-    title: 'Coming Soon',
-    isComingSoon: true,
+    id: 'finalstars-twilight',
+    title: 'FinalStars Twilight',
+    cardLines: ['FinalStars', 'Twilight'],
+    isComingSoon: false,
+    tag: 'game',
+    details: {
+      vi: 'FinalStars Twilight là dự án thuộc vũ trụ FinalStars, hiện đang trong giai đoạn lên ý tưởng và định hình thế giới quan.',
+      en: 'FinalStars Twilight is an upcoming title in the FinalStars universe, currently in the concept and world-building phase.',
+    },
+    development: {
+      toolProject: {
+        name: 'finalstars_gp_tool',
+        repo: 'Enriah/finalstars_gp_tool',
+        description: {
+          vi: 'Công cụ chuyên dụng quản lý và biên soạn cơ chế gameplay cho dự án FinalStars Twilight.',
+          en: 'Tool for managing the gameplay of FinalStars Twilight Project.',
+        },
+        githubUrl: 'https://github.com/Enriah/finalstars_gp_tool',
+        tags: ['Gameplay Management', 'Game Tool', 'GitHub Repository'],
+      },
+    },
+    news: [
+      {
+        id: 'fst-news-1',
+        date: '2026-11-13',
+        category: { vi: 'Công bố', en: 'Announcement' },
+        title: {
+          vi: 'Khởi động giai đoạn tiền kỳ cho dự án FinalStars Twilight',
+          en: 'Pre-production Kickoff for FinalStars Twilight',
+        },
+        summary: {
+          vi: 'Dự án mở rộng thuộc dòng FinalStars chính thức được đưa vào danh sách phát triển tiếp theo của AnomalyWall.',
+          en: 'The expansion title in the FinalStars series has officially been added to AnomalyWall’s upcoming development slate.',
+        },
+      },
+      {
+        id: 'fst-news-2',
+        date: '2026-10-24',
+        category: { vi: 'Công cụ', en: 'Devlog' },
+        title: {
+          vi: 'Mở mã nguồn công cụ quản lý gameplay finalstars_gp_tool',
+          en: 'Open-sourced finalstars_gp_tool Gameplay Manager',
+        },
+        summary: {
+          vi: 'Công cụ hỗ trợ biên soạn cơ chế gameplay và quản lý nhánh cốt truyện tương tác cho dự án FinalStars Twilight đã được cập nhật trên GitHub.',
+          en: 'Our dedicated tool for authoring gameplay mechanics and interactive narrative branches in FinalStars Twilight is now available on GitHub.',
+        },
+      },
+    ],
   },
   {
     id: 'project-3',
